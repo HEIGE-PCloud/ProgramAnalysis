@@ -1,10 +1,5 @@
 module
 
-abbrev Label := Nat
-
-def Var := String
-deriving Repr, ToString
-
 def Char.toSuperScript : Char → Char
   | '0' => '⁰'
   | '1' => '¹'
@@ -19,6 +14,12 @@ def Char.toSuperScript : Char → Char
   | c => c
 
 def Nat.toSuperscript (n : Nat) : String := (toString n).map Char.toSuperScript
+
+namespace ControlFlowAnalysis
+abbrev Label := Nat
+
+def Var := String
+deriving Repr, ToString
 
 inductive Op
   | plus
@@ -207,3 +208,4 @@ def example2Fns := allFns example2
 def example2Constraints := genCFAConstraints example2Fns example2
 
 #eval example2Constraints.map (fun c => c.pp)
+end ControlFlowAnalysis
