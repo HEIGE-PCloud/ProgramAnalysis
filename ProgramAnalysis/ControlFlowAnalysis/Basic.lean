@@ -1,6 +1,6 @@
 module
 
-import Std
+public import Std.Data.TreeSet
 
 def Char.toSuperScript : Char → Char
   | '0' => '⁰'
@@ -131,7 +131,7 @@ all occurances of t are of the form fn x => e
 public inductive AbstractDomain
   | cache : Label → AbstractDomain
   | env : Var → AbstractDomain
-deriving Repr
+deriving Repr, Ord
 
 public def AbstractDomain.pp : AbstractDomain → String
   | .cache n => s!"C({n})"
@@ -141,7 +141,7 @@ public def AbstractDomain.pp : AbstractDomain → String
 public structure FnTerm where
   var : Var
   body : Expr
-deriving Repr
+deriving Repr, Ord
 
 public def FnTerm.pp (t : FnTerm) : String :=
   s!"fn {t.var} => {t.body.pp}"
@@ -153,7 +153,7 @@ public inductive Constraint
   | literal (t : FnTerm) (rhs : AbstractDomain) : Constraint
   /-- `{t} ⊆ rhs' → lhs ⊆ rhs` -/
   | conditional (t : FnTerm) (rhs' : AbstractDomain) (lhs rhs : AbstractDomain) : Constraint
-deriving Repr
+deriving Repr, Ord
 
 public def Constraint.pp : Constraint → String
   | .subset lhs rhs => s!"{lhs.pp} ⊆ {rhs.pp}"
@@ -170,38 +170,37 @@ public def allFns : Expr → List FnTerm
   | .op _ t1 t2 => allFns t1 ++ allFns t2
   | .letin _ t1 t2 => allFns t1 ++ allFns t2
 
-
-public def constraints : Expr → ReaderM (List FnTerm) (List Constraint)
+public def constraints : Expr → ReaderM (List FnTerm) (Std.TreeSet Constraint)
   | .e term label => match term with
-    | .c _ => pure []
-    | .x x => pure [.subset (.env x) (.cache label)]
+    | .c _ => pure ∅
+    | .x x => pure {(.subset (.env x) (.cache label))}
     | .ite t0 t1 t2 => do
       let c0 ← constraints t0
       let c1 ← constraints t1
       let c2 ← constraints t2
-      return c0 ++ c1 ++ c2 ++
-        [.subset (.cache t1.label) (.cache label)] ++
-        [.subset (.cache t2.label) (.cache label)]
+      return c0 ∪ c1 ∪ c2 ∪
+        {(.subset (.cache t1.label) (.cache label))} ∪
+        {(.subset (.cache t2.label) (.cache label))}
     | .letin x t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
-      return c1 ++ c2 ++
-        [.subset (.cache t1.label) (.env x)] ++
-        [.subset (.cache t2.label) (.cache label)]
+      return c1 ∪ c2 ∪
+        {(.subset (.cache t1.label) (.env x))} ∪
+        {(.subset (.cache t2.label) (.cache label))}
     | .op _ t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
-      return c1 ++ c2
+      return c1 ∪ c2
     | .fn x e => do
       let ce ← constraints e
-      return [Constraint.literal (FnTerm.mk x e) (.cache label)] ++ ce
+      return {Constraint.literal (FnTerm.mk x e) (.cache label)} ∪ ce
     | .app t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
       let fns ← read
-      return c1 ++ c2 ++
-        (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ++
-        (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache label)))
+      return c1 ∪ c2 ∪
+        .ofList (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ∪
+        .ofList (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache label)))
 
 def example2 : Expr := .build <|
   Expr.mkLetIn "f₁" (Expr.mkFn "x₁" (Expr.mkVar "x₁"))
@@ -215,7 +214,7 @@ def example2Fns := allFns example2
 #eval example2Fns.map (fun t => t.pp)
 def example2Constraints := (constraints example2).run example2Fns
 
-#eval example2Constraints.map (fun c => c.pp)
+#eval example2Constraints.toList.map (fun c => c.pp)
 
 def solveConstraints (constraints: List Constraint) : Std.TreeMap Var (Std.TreeSet Term) := sorry
 end ControlFlowAnalysis
