@@ -1,6 +1,7 @@
 module
 
 public import Std.Data.TreeSet
+public import Std.Data.TreeMap
 
 def Char.toSuperScript : Char → Char
   | '0' => '⁰'
@@ -16,6 +17,9 @@ def Char.toSuperScript : Char → Char
   | c => c
 
 def Nat.toSuperscript (n : Nat) : String := (toString n).map Char.toSuperScript
+
+def Std.TreeSet.subset (s1 s2 : Std.TreeSet α cmp) : Bool :=
+  s1.all s2.contains
 
 namespace ControlFlowAnalysis
 public abbrev Label := Nat
@@ -122,7 +126,7 @@ def example1 : Expr := .build <|
 public inductive ConcreteDomain
   | cache : Label → ConcreteDomain
   | env : Var → ConcreteDomain
-deriving Repr, Ord
+deriving Repr, Ord, Inhabited
 
 public def ConcreteDomain.pp : ConcreteDomain → String
   | .cache n => s!"C({n})"
@@ -160,7 +164,7 @@ public def Constraint.pp : Constraint → String
   | .literal t rhs => s!"{t.pp} ⊆ {rhs.pp}"
   | .conditional t rhs' lhs rhs => s!"{t.pp} ⊆ {rhs'.pp} => {lhs.pp} ⊆ {rhs.pp}"
 
-public def allFns : Expr → List FnTerm
+public def Expr.allFns : Expr → List FnTerm
 | .e term _ => match term with
   | .c _ => []
   | .x _ => []
@@ -170,7 +174,7 @@ public def allFns : Expr → List FnTerm
   | .op _ t1 t2 => allFns t1 ++ allFns t2
   | .letin _ t1 t2 => allFns t1 ++ allFns t2
 
-public def constraints : Expr → ReaderM (List FnTerm) (Std.TreeSet Constraint)
+public def Expr.constraints : Expr → ReaderM (List FnTerm) (Std.TreeSet Constraint)
   | .e term label => match term with
     | .c _ => pure ∅
     | .x x => pure {(.subset (.env x) (.cache label))}
@@ -191,9 +195,9 @@ public def constraints : Expr → ReaderM (List FnTerm) (Std.TreeSet Constraint)
       let c1 ← constraints t1
       let c2 ← constraints t2
       return c1 ∪ c2
-    | .fn x e => do
-      let ce ← constraints e
-      return {Constraint.literal (FnTerm.mk x e) (.cache label)} ∪ ce
+    | .fn x expr => do
+      let ce ← constraints expr
+      return {Constraint.literal (FnTerm.mk x expr) (.cache label)} ∪ ce
     | .app t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
@@ -209,16 +213,80 @@ def example2 : Expr := .build <|
 
 #eval example2.pp
 
-def example2Fns := allFns example2
+def example2Fns := Expr.allFns example2
 
 #eval example2Fns.map (fun t => t.pp)
-def example2Constraints := (constraints example2).run example2Fns
+def example2Constraints := (Expr.constraints example2).run example2Fns
 
-#eval example2Constraints.toList.map (fun c => c.pp)
+-- #eval example2Constraints.toList.map (fun c => c.pp)
 
-def solveConstraints (constraints: List Constraint) : Std.TreeMap Var (Std.TreeSet Term) := Id.run do
-  let mut W : List Nat := []
+public abbrev Constraint.Node := ConcreteDomain
+
+
+def Constraint.nodes : Constraint → List Node
+  | .subset lhs rhs => [lhs, rhs]
+  | .literal _ rhs => [rhs]
+  | .conditional _ rhs' lhs rhs => [rhs', lhs, rhs]
+
+def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.TreeSet FnTerm) := Id.run do
+  let nodes : List Node := (constraints.map Constraint.nodes).flatten
+  let mut D : Std.TreeMap Node (Std.TreeSet FnTerm) := {}
+  let mut E : Std.TreeMap Node (List Constraint) := {}
+
+  -- Step 1: Initialization
+  let mut W : List Node := []
+  for q in nodes do
+    D := D.insert q ∅
+    E := E.insert q ∅
+
+  -- Step 2: Building the graph
   for cc in constraints do
-    continue
-  pure {}
+    match cc with
+    | .literal t p => do
+      let x := D[p]!
+      if !x.contains t then
+        D := D.insert p (x.insert t)
+        W := p :: W
+    | .subset p₁ p₂ => do
+      E := E.insert p₁ (cc :: E[p₁]!)
+    | .conditional t p p₁ p₂ => do
+      E := E.insert p₁ (cc :: E[p₁]!)
+      E := E.insert p (cc :: E[p]!)
+
+  -- Step 3: Iteration
+  while !W.isEmpty do
+    let q := W.head!
+    W := W.tail
+    for cc in E[q]! do
+      match cc with
+      | .subset p₁ p₂ => do
+        -- add(p₂, D[p₁])
+        if !(D[p₁]!.subset D[p₂]!) then
+          D := D.insert p₂ (D[p₁]!.union D[p₂]!)
+          W := p₂ :: W
+      | .conditional t p p₁ p₂ =>
+        if D[p]!.contains t then
+          -- add(p₂, D[p₁])
+          if !(D[p₁]!.subset D[p₂]!) then
+            D := D.insert p₂ (D[p₁]!.union D[p₂]!)
+            W := p₂ :: W
+      | _ => continue
+
+  -- Step 4: Recording the solution
+  pure D
+
+def example3 : Expr := .build <|
+  open Expr in
+  mkApp (mkFn "x" (mkVar "x")) (mkFn "y" (mkVar "y"))
+
+def example3.allFns := Expr.allFns example3
+
+def example3.constraints := (Expr.constraints example3).run example3.allFns
+
+#eval example3.constraints.toList.map (fun c => c.pp)
+
+def example3.solution := Constraint.solve example3.constraints.toList
+
+#eval example3.solution.toList.map (fun (node, value) => s!"{node.pp} ↦ {value.toList.map (fun t: FnTerm => t.pp)}")
+
 end ControlFlowAnalysis
