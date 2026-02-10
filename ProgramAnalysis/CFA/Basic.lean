@@ -1,5 +1,7 @@
 module
 
+abbrev Label := Nat
+
 def Var := String
 deriving Repr, ToString
 
@@ -27,11 +29,11 @@ def Op.pp : Op → String
 
 mutual
 inductive Expr
-  | e : Term → Nat → Expr
+  | e : Term → Label → Expr
 deriving Repr
 
 inductive Term
-  | c : Nat → Term
+  | c : Label → Term
   | x : Var → Term
   | fn : Var → Expr → Term
   | app : Expr → Expr → Term
@@ -55,64 +57,59 @@ def Expr.pp : Expr → String
   | .e t l => s!"{t.pp}{l.toSuperscript}"
 end
 
-instance : ToString Expr where
-  toString := Expr.pp
-
-instance : ToString Term where
-  toString := Term.pp
 example : Expr := Expr.e (
   Term.app
     (Expr.e (Term.fn "x" (Expr.e (Term.x "x") 1)) 2)
     (Expr.e (Term.fn "y" (Expr.e (Term.x "y") 3)) 4)
 ) 5
 
-private def Expr.label : Expr → Nat
+private def Expr.label : Expr → Label
   | Expr.e _ n => n
 
-private def freshLabel : StateM Nat Nat := do
+private def freshLabel : StateM Label Label := do
   let n ← get
   set (n + 1)
   return n
 
-def Expr.mkConst (n : Nat) : StateM Nat Expr := do
+def Expr.mkConst (n : Label) : StateM Label Expr := do
   let l ← freshLabel
   return Expr.e (Term.c n) l
 
-def Expr.mkVar (x : Var) : StateM Nat Expr := do
+def Expr.mkVar (x : Var) : StateM Label Expr := do
   let l ← freshLabel
   return Expr.e (Term.x x) l
 
-def Expr.mkFn (x : Var) (body : StateM Nat Expr) : StateM Nat Expr := do
+def Expr.mkFn (x : Var) (body : StateM Label Expr) : StateM Label Expr := do
   let b ← body
   let l ← freshLabel
   return Expr.e (Term.fn x b) l
 
-def Expr.mkApp (e1 e2 : StateM Nat Expr) : StateM Nat Expr := do
+def Expr.mkApp (e1 e2 : StateM Label Expr) : StateM Label Expr := do
   let a ← e1
   let b ← e2
   let l ← freshLabel
   return Expr.e (Term.app a b) l
 
-def Expr.mkIte (cond thn els : StateM Nat Expr) : StateM Nat Expr := do
+def Expr.mkIte (cond thn els : StateM Label Expr) : StateM Label Expr := do
   let c ← cond
   let t ← thn
   let e ← els
   let l ← freshLabel
   return Expr.e (Term.ite c t e) l
 
-def Expr.mkOp (o : Op) (e1 e2 : StateM Nat Expr) : StateM Nat Expr := do
+def Expr.mkOp (o : Op) (e1 e2 : StateM Label Expr) : StateM Label Expr := do
   let a ← e1
   let b ← e2
   let l ← freshLabel
   return Expr.e (Term.op o a b) l
 
-def Expr.mkLetIn (x : Var) (e1 e2 : StateM Nat Expr) : StateM Nat Expr := do
+def Expr.mkLetIn (x : Var) (e1 e2 : StateM Label Expr) : StateM Label Expr := do
   let a ← e1
   let b ← e2
   let l ← freshLabel
   return Expr.e (Term.letin x a b) l
 
-def Expr.build (m : StateM Nat Expr) : Expr :=
+def Expr.build (m : StateM Label Expr) : Expr :=
   (m.run 1).1
 
 def example1 : Expr := .build <|
@@ -122,15 +119,15 @@ def example1 : Expr := .build <|
 
 /-- Constraint data type
 Constraint is in the form of
-lhs subset rhs
-{t} subset rhs' => lhs subset rhs
+lhs ⊆ rhs
+{t} ⊆ rhs' => lhs ⊆ rhs
 where
 rhs is of the form C(l) or r(x)
-lhs is of the form C(l), r(x), or {t} and all occurances of t
-are of the form fn x => e
+lhs is of the form C(l), r(x), or {t}
+all occurances of t are of the form fn x => e
 -/
 inductive AbstractDomain
-  | cache : Nat → AbstractDomain
+  | cache : Label → AbstractDomain
   | env : Var → AbstractDomain
 deriving Repr
 
@@ -139,21 +136,21 @@ def AbstractDomain.pp : AbstractDomain → String
   | .env var => s!"r({var})"
 
 /-- A term value that appears in constraints (always of the form `fn x => e`) -/
-structure TermValue where
+structure FnTerm where
   var : Var
   body : Expr
 deriving Repr
 
-def TermValue.pp (t : TermValue) : String :=
+def FnTerm.pp (t : FnTerm) : String :=
   s!"fn {t.var} => {t.body.pp}"
 
 inductive Constraint
   /-- `lhs ⊆ rhs` -/
   | subset (lhs rhs : AbstractDomain) : Constraint
   /-- `{t} ⊆ rhs` -/
-  | literal (t : TermValue) (rhs : AbstractDomain) : Constraint
+  | literal (t : FnTerm) (rhs : AbstractDomain) : Constraint
   /-- `{t} ⊆ rhs' → lhs ⊆ rhs` -/
-  | conditional (t : TermValue) (rhs' : AbstractDomain) (lhs rhs : AbstractDomain) : Constraint
+  | conditional (t : FnTerm) (rhs' : AbstractDomain) (lhs rhs : AbstractDomain) : Constraint
 deriving Repr
 
 def Constraint.pp : Constraint → String
@@ -162,7 +159,7 @@ def Constraint.pp : Constraint → String
   | .conditional t rhs' lhs rhs => s!"{t.pp} ⊆ {rhs'.pp} => {lhs.pp} ⊆ {rhs.pp}"
 
 
-def genCFAConstraints (allFns : List TermValue) : Expr → List Constraint
+def genCFAConstraints (allFns : List FnTerm) : Expr → List Constraint
   | .e term l => match term with
     | .c _ => []
     | .x x => [.subset (.env x) (.cache l)]
@@ -180,18 +177,18 @@ def genCFAConstraints (allFns : List TermValue) : Expr → List Constraint
     | .op _ t1 t2 =>
       genCFAConstraints allFns t1 ++
       genCFAConstraints allFns t2
-    | .fn x e => [Constraint.literal (TermValue.mk x e) (.cache l)] ++ genCFAConstraints allFns e
+    | .fn x e => [Constraint.literal (FnTerm.mk x e) (.cache l)] ++ genCFAConstraints allFns e
     | .app t1 t2 =>
       genCFAConstraints allFns t1 ++
       genCFAConstraints allFns t2 ++
       (allFns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ++
       (allFns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache l)))
 
-def allFns : Expr → List TermValue
+def allFns : Expr → List FnTerm
 | .e term _ => match term with
   | .c _ => []
   | .x _ => []
-  | .fn x body => [TermValue.mk x body] ++ allFns body
+  | .fn x body => [FnTerm.mk x body] ++ allFns body
   | .app t1 t2 => allFns t1 ++ allFns t2
   | .ite t0 t1 t2 => allFns t0 ++ allFns t1 ++ allFns t2
   | .op _ t1 t2 => allFns t1 ++ allFns t2
