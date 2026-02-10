@@ -201,6 +201,8 @@ def example2 : Expr := .build <|
     (Expr.mkLetIn "f₂" (Expr.mkFn "x₂" (Expr.mkVar "x₂"))
     (Expr.mkApp (Expr.mkApp (Expr.mkVar "f₁") (Expr.mkVar "f₂")) (Expr.mkFn "y" (Expr.mkVar "y"))))
 
+#eval example2.print
+
 def example2Fns := allFns example2
 
 #eval example2Fns.map (fun t => t.print)
