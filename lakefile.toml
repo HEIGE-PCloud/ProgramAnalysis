@@ -1,0 +1,10 @@
+name = "ProgramAnalysis"
+version = "0.1.0"
+defaultTargets = ["programanalysis"]
+
+[[lean_lib]]
+name = "ProgramAnalysis"
+
+[[lean_exe]]
+name = "programanalysis"
+root = "Main"
