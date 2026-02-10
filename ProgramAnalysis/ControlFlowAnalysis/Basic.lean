@@ -28,10 +28,28 @@ public abbrev Var := String
 
 public inductive Op
   | plus
+  | minus
+  | times
+  | div
+  | eq
+  | lt
+  | gt
+  | le
+  | ge
+  | neq
 deriving Repr, Ord
 
 def Op.pp : Op → String
   | .plus => "+"
+  | .minus => "-"
+  | .times => "*"
+  | .div => "/"
+  | .eq => "=="
+  | .lt => "<"
+  | .gt => ">"
+  | .le => "<="
+  | .ge => ">="
+  | .neq => "!="
 
 mutual
 public inductive Expr
@@ -118,10 +136,9 @@ public def Expr.mkLetIn (x : Var) (e1 e2 : StateM Label Expr) : StateM Label Exp
 public def Expr.build (m : StateM Label Expr) : Expr :=
   (m.run 1).1
 
-def example1 : Expr := .build <|
+example : Expr := .build <|
   Expr.mkApp (Expr.mkFn "x" (Expr.mkVar "x")) (Expr.mkFn "y" (Expr.mkVar "y"))
 
-#eval example1
 
 public inductive ConcreteDomain
   | cache : Label → ConcreteDomain
@@ -206,29 +223,14 @@ public def Expr.constraints : Expr → ReaderM (List FnTerm) (Std.TreeSet Constr
         .ofList (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ∪
         .ofList (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache label)))
 
-def example2 : Expr := .build <|
-  Expr.mkLetIn "f₁" (Expr.mkFn "x₁" (Expr.mkVar "x₁"))
-    (Expr.mkLetIn "f₂" (Expr.mkFn "x₂" (Expr.mkVar "x₂"))
-    (Expr.mkApp (Expr.mkApp (Expr.mkVar "f₁") (Expr.mkVar "f₂")) (Expr.mkFn "y" (Expr.mkVar "y"))))
-
-#eval example2.pp
-
-def example2Fns := Expr.allFns example2
-
-#eval example2Fns.map (fun t => t.pp)
-def example2Constraints := (Expr.constraints example2).run example2Fns
-
--- #eval example2Constraints.toList.map (fun c => c.pp)
-
 public abbrev Constraint.Node := ConcreteDomain
 
-
-def Constraint.nodes : Constraint → List Node
+public def Constraint.nodes : Constraint → List Node
   | .subset lhs rhs => [lhs, rhs]
   | .literal _ rhs => [rhs]
   | .conditional _ rhs' lhs rhs => [rhs', lhs, rhs]
 
-def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.TreeSet FnTerm) := Id.run do
+public def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.TreeSet FnTerm) := Id.run do
   let nodes : List Node := (constraints.map Constraint.nodes).flatten
   let mut D : Std.TreeMap Node (Std.TreeSet FnTerm) := {}
   let mut E : Std.TreeMap Node (List Constraint) := {}
@@ -279,19 +281,5 @@ def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.Tree
 
   -- Step 4: Recording the solution
   pure D
-
-def example3 : Expr := .build <|
-  open Expr in
-  mkApp (mkFn "x" (mkVar "x")) (mkFn "y" (mkVar "y"))
-
-def example3.allFns := Expr.allFns example3
-
-def example3.constraints := (Expr.constraints example3).run example3.allFns
-
-#eval example3.constraints.toList.map (fun c => c.pp)
-
-def example3.solution := Constraint.solve example3.constraints.toList
-
-#eval example3.solution.toList.map (fun (node, value) => s!"{node.pp} ↦ {value.toList.map (fun t: FnTerm => t.pp)}")
 
 end ControlFlowAnalysis
