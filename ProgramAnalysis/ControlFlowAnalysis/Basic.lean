@@ -232,9 +232,20 @@ def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.Tree
   let nodes : List Node := (constraints.map Constraint.nodes).flatten
   let mut D : Std.TreeMap Node (Std.TreeSet FnTerm) := {}
   let mut E : Std.TreeMap Node (List Constraint) := {}
+  let mut W : List Node := []
+
+  let add
+    (D : Std.TreeMap Node (Std.TreeSet FnTerm))
+    (W : List Node)
+    (q : Node)
+    (d: Std.TreeSet FnTerm) :
+    Std.TreeMap Node (Std.TreeSet FnTerm) × List Node :=
+    if !(d.subset D[q]!) then
+      ⟨D.insert q (d ∪ D[q]!), q :: W⟩
+    else
+      ⟨D, W⟩
 
   -- Step 1: Initialization
-  let mut W : List Node := []
   for q in nodes do
     D := D.insert q ∅
     E := E.insert q ∅
@@ -243,10 +254,8 @@ def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.Tree
   for cc in constraints do
     match cc with
     | .literal t p => do
-      let x := D[p]!
-      if !x.contains t then
-        D := D.insert p (x.insert t)
-        W := p :: W
+      -- add(p, {t})
+      let (D', W') := add D W p {t}; D := D'; W := W'
     | .subset p₁ p₂ => do
       E := E.insert p₁ (cc :: E[p₁]!)
     | .conditional t p p₁ p₂ => do
@@ -261,15 +270,11 @@ def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.Tree
       match cc with
       | .subset p₁ p₂ => do
         -- add(p₂, D[p₁])
-        if !(D[p₁]!.subset D[p₂]!) then
-          D := D.insert p₂ (D[p₁]!.union D[p₂]!)
-          W := p₂ :: W
+        let (D', W') := add D W p₂ D[p₁]!; D := D'; W := W'
       | .conditional t p p₁ p₂ =>
         if D[p]!.contains t then
           -- add(p₂, D[p₁])
-          if !(D[p₁]!.subset D[p₂]!) then
-            D := D.insert p₂ (D[p₁]!.union D[p₂]!)
-            W := p₂ :: W
+          let (D', W') := add D W p₂ D[p₁]!; D := D'; W := W'
       | _ => continue
 
   -- Step 4: Recording the solution
