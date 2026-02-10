@@ -1,5 +1,7 @@
 module
 
+import Std
+
 def Char.toSuperScript : Char → Char
   | '0' => '⁰'
   | '1' => '¹'
@@ -18,12 +20,11 @@ def Nat.toSuperscript (n : Nat) : String := (toString n).map Char.toSuperScript
 namespace ControlFlowAnalysis
 public abbrev Label := Nat
 
-@[expose] public def Var := String
-deriving Repr, ToString
+public abbrev Var := String
 
 public inductive Op
   | plus
-deriving Repr
+deriving Repr, Ord
 
 def Op.pp : Op → String
   | .plus => "+"
@@ -31,7 +32,7 @@ def Op.pp : Op → String
 mutual
 public inductive Expr
   | e : Term → Label → Expr
-deriving Repr
+deriving Repr, Ord
 
 public inductive Term
   | c : Label → Term
@@ -41,7 +42,7 @@ public inductive Term
   | ite : Expr → Expr → Expr → Term
   | op : Op → Expr → Expr → Term
   | letin : Var → Expr → Expr → Term
-deriving Repr
+deriving Repr, Ord
 end
 
 mutual
@@ -215,4 +216,6 @@ def example2Fns := allFns example2
 def example2Constraints := (constraints example2).run example2Fns
 
 #eval example2Constraints.map (fun c => c.pp)
+
+def solveConstraints (constraints: List Constraint) : Std.TreeMap Var (Std.TreeSet Term) := sorry
 end ControlFlowAnalysis
