@@ -5,21 +5,19 @@ import ProgramAnalysis.ControlFlowAnalysis.Basic
 
 namespace ControlFlowAnalysis.Example
 
+-- Example in lecture
 def expr1 : Expr := .build <|
   open Expr in
   mkApp (mkFn "x" (mkVar "x")) (mkFn "y" (mkVar "y"))
 
+-- Tutorial Sheet 4, Exercise 1
 def expr2 : Expr := .build <|
   open Expr in
   mkLetIn "f₁" (mkFn "x₁" (mkVar "x₁"))
     (mkLetIn "f₂" (mkFn "x₂" (mkVar "x₂"))
     (mkApp (mkApp (mkVar "f₁") (mkVar "f₂")) (mkFn "y" (mkVar "y"))))
 
-def expr3 : Expr := .build <|
-  open Expr in
-  mkLetIn "f" (mkFn "x" (mkIte (mkOp Op.gt (mkVar "x") (mkConst 0)) (mkFn "y" (mkVar "y")) (mkFn "z" (mkConst 25)))) (mkApp (mkApp (mkVar "f") (mkConst 3)) (mkConst 0))
-
-def expr := expr3
+def expr := expr2
 
 #eval expr.pp
 
