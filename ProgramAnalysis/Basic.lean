@@ -1,5 +1,3 @@
-def hello := "world"
-
 def Var := String
 deriving Repr, ToString
 
@@ -17,6 +15,7 @@ def Char.toSuperScript : Char → Char
   | c => c
 
 def Nat.toSuperscript (n : Nat) : String := (toString n).map Char.toSuperScript
+
 inductive Op
   | plus
 deriving Repr
