@@ -159,32 +159,6 @@ public def Constraint.pp : Constraint → String
   | .literal t rhs => s!"{t.pp} ⊆ {rhs.pp}"
   | .conditional t rhs' lhs rhs => s!"{t.pp} ⊆ {rhs'.pp} => {lhs.pp} ⊆ {rhs.pp}"
 
-
-public def genCFAConstraints (allFns : List FnTerm) : Expr → List Constraint
-  | .e term l => match term with
-    | .c _ => []
-    | .x x => [.subset (.env x) (.cache l)]
-    | .ite t0 t1 t2 =>
-      genCFAConstraints allFns t0 ++
-      genCFAConstraints allFns t1 ++
-      genCFAConstraints allFns t2 ++
-      [.subset (.cache t1.label) (.cache l)] ++
-      [.subset (.cache t2.label) (.cache l)]
-    | .letin x t1 t2 =>
-      genCFAConstraints allFns t1 ++
-      genCFAConstraints allFns t2 ++
-      [.subset (.cache t1.label) (.env x)] ++
-      [.subset (.cache t2.label) (.cache l)]
-    | .op _ t1 t2 =>
-      genCFAConstraints allFns t1 ++
-      genCFAConstraints allFns t2
-    | .fn x e => [Constraint.literal (FnTerm.mk x e) (.cache l)] ++ genCFAConstraints allFns e
-    | .app t1 t2 =>
-      genCFAConstraints allFns t1 ++
-      genCFAConstraints allFns t2 ++
-      (allFns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ++
-      (allFns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache l)))
-
 public def allFns : Expr → List FnTerm
 | .e term _ => match term with
   | .c _ => []
@@ -194,6 +168,39 @@ public def allFns : Expr → List FnTerm
   | .ite t0 t1 t2 => allFns t0 ++ allFns t1 ++ allFns t2
   | .op _ t1 t2 => allFns t1 ++ allFns t2
   | .letin _ t1 t2 => allFns t1 ++ allFns t2
+
+
+public def constraints : Expr → ReaderM (List FnTerm) (List Constraint)
+  | .e term l => match term with
+    | .c _ => pure []
+    | .x x => pure [.subset (.env x) (.cache l)]
+    | .ite t0 t1 t2 => do
+      let c0 ← constraints t0
+      let c1 ← constraints t1
+      let c2 ← constraints t2
+      return c0 ++ c1 ++ c2 ++
+        [.subset (.cache t1.label) (.cache l)] ++
+        [.subset (.cache t2.label) (.cache l)]
+    | .letin x t1 t2 => do
+      let c1 ← constraints t1
+      let c2 ← constraints t2
+      return c1 ++ c2 ++
+        [.subset (.cache t1.label) (.env x)] ++
+        [.subset (.cache t2.label) (.cache l)]
+    | .op _ t1 t2 => do
+      let c1 ← constraints t1
+      let c2 ← constraints t2
+      return c1 ++ c2
+    | .fn x e => do
+      let ce ← constraints e
+      return [Constraint.literal (FnTerm.mk x e) (.cache l)] ++ ce
+    | .app t1 t2 => do
+      let c1 ← constraints t1
+      let c2 ← constraints t2
+      let fns ← read
+      return c1 ++ c2 ++
+        (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ++
+        (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache l)))
 
 def example2 : Expr := .build <|
   Expr.mkLetIn "f₁" (Expr.mkFn "x₁" (Expr.mkVar "x₁"))
@@ -205,7 +212,7 @@ def example2 : Expr := .build <|
 def example2Fns := allFns example2
 
 #eval example2Fns.map (fun t => t.pp)
-def example2Constraints := genCFAConstraints example2Fns example2
+def example2Constraints := (constraints example2).run example2Fns
 
 #eval example2Constraints.map (fun c => c.pp)
 end ControlFlowAnalysis
