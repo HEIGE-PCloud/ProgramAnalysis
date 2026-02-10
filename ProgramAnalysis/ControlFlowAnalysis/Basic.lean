@@ -119,21 +119,12 @@ def example1 : Expr := .build <|
 
 #eval example1
 
-/-- Constraint data type
-Constraint is in the form of
-lhs ⊆ rhs
-{t} ⊆ rhs' => lhs ⊆ rhs
-where
-rhs is of the form C(l) or r(x)
-lhs is of the form C(l), r(x), or {t}
-all occurances of t are of the form fn x => e
--/
-public inductive AbstractDomain
-  | cache : Label → AbstractDomain
-  | env : Var → AbstractDomain
+public inductive ConcreteDomain
+  | cache : Label → ConcreteDomain
+  | env : Var → ConcreteDomain
 deriving Repr, Ord
 
-public def AbstractDomain.pp : AbstractDomain → String
+public def ConcreteDomain.pp : ConcreteDomain → String
   | .cache n => s!"C({n})"
   | .env var => s!"r({var})"
 
@@ -146,13 +137,22 @@ deriving Repr, Ord
 public def FnTerm.pp (t : FnTerm) : String :=
   s!"fn {t.var} => {t.body.pp}"
 
+/--
+Constraint is in the form of
+- lhs ⊆ rhs
+- {t} ⊆ rhs' => lhs ⊆ rhs
+
+rhs is of the form C(l) or r(x)
+lhs is of the form C(l), r(x), or {t}
+t is of the form fn x => e
+-/
 public inductive Constraint
   /-- `lhs ⊆ rhs` -/
-  | subset (lhs rhs : AbstractDomain) : Constraint
+  | subset (lhs rhs : ConcreteDomain) : Constraint
   /-- `{t} ⊆ rhs` -/
-  | literal (t : FnTerm) (rhs : AbstractDomain) : Constraint
+  | literal (t : FnTerm) (rhs : ConcreteDomain) : Constraint
   /-- `{t} ⊆ rhs' → lhs ⊆ rhs` -/
-  | conditional (t : FnTerm) (rhs' : AbstractDomain) (lhs rhs : AbstractDomain) : Constraint
+  | conditional (t : FnTerm) (rhs' : ConcreteDomain) (lhs rhs : ConcreteDomain) : Constraint
 deriving Repr, Ord
 
 public def Constraint.pp : Constraint → String
@@ -216,5 +216,9 @@ def example2Constraints := (constraints example2).run example2Fns
 
 #eval example2Constraints.toList.map (fun c => c.pp)
 
-def solveConstraints (constraints: List Constraint) : Std.TreeMap Var (Std.TreeSet Term) := sorry
+def solveConstraints (constraints: List Constraint) : Std.TreeMap Var (Std.TreeSet Term) := Id.run do
+  let mut W : List Nat := []
+  for cc in constraints do
+    continue
+  pure {}
 end ControlFlowAnalysis
