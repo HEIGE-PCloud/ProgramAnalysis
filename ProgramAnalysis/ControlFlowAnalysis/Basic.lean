@@ -171,36 +171,36 @@ public def allFns : Expr → List FnTerm
 
 
 public def constraints : Expr → ReaderM (List FnTerm) (List Constraint)
-  | .e term l => match term with
+  | .e term label => match term with
     | .c _ => pure []
-    | .x x => pure [.subset (.env x) (.cache l)]
+    | .x x => pure [.subset (.env x) (.cache label)]
     | .ite t0 t1 t2 => do
       let c0 ← constraints t0
       let c1 ← constraints t1
       let c2 ← constraints t2
       return c0 ++ c1 ++ c2 ++
-        [.subset (.cache t1.label) (.cache l)] ++
-        [.subset (.cache t2.label) (.cache l)]
+        [.subset (.cache t1.label) (.cache label)] ++
+        [.subset (.cache t2.label) (.cache label)]
     | .letin x t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
       return c1 ++ c2 ++
         [.subset (.cache t1.label) (.env x)] ++
-        [.subset (.cache t2.label) (.cache l)]
+        [.subset (.cache t2.label) (.cache label)]
     | .op _ t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
       return c1 ++ c2
     | .fn x e => do
       let ce ← constraints e
-      return [Constraint.literal (FnTerm.mk x e) (.cache l)] ++ ce
+      return [Constraint.literal (FnTerm.mk x e) (.cache label)] ++ ce
     | .app t1 t2 => do
       let c1 ← constraints t1
       let c2 ← constraints t2
       let fns ← read
       return c1 ++ c2 ++
         (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ++
-        (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache l)))
+        (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache label)))
 
 def example2 : Expr := .build <|
   Expr.mkLetIn "f₁" (Expr.mkFn "x₁" (Expr.mkVar "x₁"))
