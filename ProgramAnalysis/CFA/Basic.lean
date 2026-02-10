@@ -1,3 +1,5 @@
+module
+
 def Var := String
 deriving Repr, ToString
 
@@ -20,7 +22,7 @@ inductive Op
   | plus
 deriving Repr
 
-def Op.print : Op → String
+def Op.pp : Op → String
   | .plus => "+"
 
 mutual
@@ -40,24 +42,24 @@ deriving Repr
 end
 
 mutual
-def Term.print : Term → String
+def Term.pp : Term → String
   | .c n => s!"{n}"
   | .x v => s!"{v}"
-  | .fn x body => s!"(fn {x} => {body.print})"
-  | .app e1 e2 => s!"({e1.print} {e2.print})"
-  | .ite cond thn els => s!"(if {cond.print} then {thn.print} else {els.print})"
-  | .op o e1 e2 => s!"({e1.print} {o.print} {e2.print})"
-  | .letin x e1 e2 => s!"(let {x} = {e1.print} in {e2.print})"
+  | .fn x body => s!"(fn {x} => {body.pp})"
+  | .app e1 e2 => s!"({e1.pp} {e2.pp})"
+  | .ite cond thn els => s!"(if {cond.pp} then {thn.pp} else {els.pp})"
+  | .op o e1 e2 => s!"({e1.pp} {o.pp} {e2.pp})"
+  | .letin x e1 e2 => s!"(let {x} = {e1.pp} in {e2.pp})"
 
-def Expr.print : Expr → String
-  | .e t l => s!"{t.print}{l.toSuperscript}"
+def Expr.pp : Expr → String
+  | .e t l => s!"{t.pp}{l.toSuperscript}"
 end
 
 instance : ToString Expr where
-  toString := Expr.print
+  toString := Expr.pp
 
 instance : ToString Term where
-  toString := Term.print
+  toString := Term.pp
 example : Expr := Expr.e (
   Term.app
     (Expr.e (Term.fn "x" (Expr.e (Term.x "x") 1)) 2)
@@ -132,7 +134,7 @@ inductive AbstractDomain
   | env : Var → AbstractDomain
 deriving Repr
 
-def AbstractDomain.print : AbstractDomain → String
+def AbstractDomain.pp : AbstractDomain → String
   | .cache n => s!"C({n})"
   | .env var => s!"r({var})"
 
@@ -142,8 +144,8 @@ structure TermValue where
   body : Expr
 deriving Repr
 
-def TermValue.print (t : TermValue) : String :=
-  s!"fn {t.var} => {t.body}"
+def TermValue.pp (t : TermValue) : String :=
+  s!"fn {t.var} => {t.body.pp}"
 
 inductive Constraint
   /-- `lhs ⊆ rhs` -/
@@ -154,10 +156,10 @@ inductive Constraint
   | conditional (t : TermValue) (rhs' : AbstractDomain) (lhs rhs : AbstractDomain) : Constraint
 deriving Repr
 
-def Constraint.print : Constraint → String
-  | .subset lhs rhs => s!"{lhs.print} ⊆ {rhs.print}"
-  | .literal t rhs => s!"{t.print} ⊆ {rhs.print}"
-  | .conditional t rhs' lhs rhs => s!"{t.print} ⊆ {rhs'.print} => {lhs.print} ⊆ {rhs.print}"
+def Constraint.pp : Constraint → String
+  | .subset lhs rhs => s!"{lhs.pp} ⊆ {rhs.pp}"
+  | .literal t rhs => s!"{t.pp} ⊆ {rhs.pp}"
+  | .conditional t rhs' lhs rhs => s!"{t.pp} ⊆ {rhs'.pp} => {lhs.pp} ⊆ {rhs.pp}"
 
 
 def genCFAConstraints (allFns : List TermValue) : Expr → List Constraint
@@ -200,11 +202,11 @@ def example2 : Expr := .build <|
     (Expr.mkLetIn "f₂" (Expr.mkFn "x₂" (Expr.mkVar "x₂"))
     (Expr.mkApp (Expr.mkApp (Expr.mkVar "f₁") (Expr.mkVar "f₂")) (Expr.mkFn "y" (Expr.mkVar "y"))))
 
-#eval example2.print
+#eval example2.pp
 
 def example2Fns := allFns example2
 
-#eval example2Fns.map (fun t => t.print)
+#eval example2Fns.map (fun t => t.pp)
 def example2Constraints := genCFAConstraints example2Fns example2
 
-#eval example2Constraints.map (fun c => c.print)
+#eval example2Constraints.map (fun c => c.pp)
