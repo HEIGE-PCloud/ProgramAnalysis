@@ -54,7 +54,7 @@ public inductive Expr
 deriving Repr, Ord
 
 public inductive Term
-  | c : Label → Term
+  | c : Nat → Term
   | x : Var → Term
   | fn : Var → Expr → Term
   | app : Expr → Expr → Term
