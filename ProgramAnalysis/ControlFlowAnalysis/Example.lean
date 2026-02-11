@@ -1,9 +1,12 @@
 module
 
-import ProgramAnalysis.ControlFlowAnalysis.Basic
+public import ProgramAnalysis.ControlFlowAnalysis.Fun
+public import ProgramAnalysis.ControlFlowAnalysis.Analysis
 
+def x := ProgramAnalysis.ControlFlowAnalysis.constraints
+namespace ProgramAnalysis.ControlFlowAnalysis.Example
 
-namespace ControlFlowAnalysis.Example
+open ProgramAnalysis.ControlFlowAnalysis.Fun
 
 -- Example in lecture
 def expr1 : Expr := .build <|
@@ -21,7 +24,8 @@ def expr := expr2
 
 #eval expr.pp
 
-def example.constraints := (Expr.constraints expr).run (Expr.allFns expr)
+open ProgramAnalysis.ControlFlowAnalysis
+def example.constraints := (ProgramAnalysis.ControlFlowAnalysis.constraints expr).run (ProgramAnalysis.ControlFlowAnalysis.allFns expr)
 
 #eval example.constraints.toList.map (fun c => c.pp)
 
@@ -30,4 +34,4 @@ def example.solution := ControlFlowAnalysis.Constraint.solve example.constraints
 #eval example.solution.toList.map (fun (node, value) => s!"{node.pp} ↦ {value.toList.map (fun t: FnTerm => t.pp)}")
 
 
-end ControlFlowAnalysis.Example
+end ProgramAnalysis.ControlFlowAnalysis.Example
