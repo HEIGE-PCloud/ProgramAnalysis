@@ -3,7 +3,6 @@ module
 public import ProgramAnalysis.ControlFlowAnalysis.Fun
 public import ProgramAnalysis.ControlFlowAnalysis.Analysis
 
-def x := ProgramAnalysis.ControlFlowAnalysis.constraints
 namespace ProgramAnalysis.ControlFlowAnalysis.Example
 
 open ProgramAnalysis.ControlFlowAnalysis.Fun
