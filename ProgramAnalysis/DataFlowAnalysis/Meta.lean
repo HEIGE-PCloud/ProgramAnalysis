@@ -97,39 +97,35 @@ meta partial def elabBoolAtom : Syntax → MetaM Expr
   | `(while_bool_atom| ($b:while_bool_atom)) => elabBoolAtom b
   | _ => throwUnsupportedSyntax
 
-meta def freshLabel : StateT Nat MetaM Expr := do
-  let n ← get
-  set (n + 1)
-  return (mkNatLit n)
-
-meta partial def elabStmt : Syntax → StateT Nat MetaM Expr
+meta partial def elabStmt : Syntax → MetaM Expr
   | `(while_stmt| $x:ident := $a:while_arith_atom) => do
     let aExpr ← elabArithAtom a
-    mkAppM ``Stmt.assign #[mkStrLit x.getId.toString, aExpr, (← freshLabel)]
+    mkAppM ``Stmt.mkAssign #[mkStrLit x.getId.toString, aExpr]
   | `(while_stmt| skip) => do
-    mkAppM ``Stmt.skip #[(← freshLabel)]
+    mkAppM ``Stmt.mkSkip #[]
   | `(while_stmt| $s1:while_stmt ; $s2:while_stmt) => do
     let s1Expr ← elabStmt s1
     let s2Expr ← elabStmt s2
-    mkAppM ``Stmt.seq #[s1Expr, s2Expr]
+    mkAppM ``Stmt.mkSeq #[s1Expr, s2Expr]
   | `(while_stmt| if $b:while_bool_atom then $s1:while_stmt else $s2:while_stmt) => do
     let bExpr ← elabBoolAtom b
     let s1Expr ← elabStmt s1
     let s2Expr ← elabStmt s2
-    mkAppM ``Stmt.sif #[bExpr, (← freshLabel), s1Expr, s2Expr]
+    mkAppM ``Stmt.mkIf #[bExpr, s1Expr, s2Expr]
   | `(while_stmt| while $b:while_bool_atom do ($s:while_stmt)) => do
     let bExpr ← elabBoolAtom b
     let sExpr ← elabStmt s
-    mkAppM ``Stmt.swhile #[bExpr, (← freshLabel), sExpr]
+    mkAppM ``Stmt.mkWhile #[bExpr, sExpr]
   | _ => throwUnsupportedSyntax
 
 private meta def elabWhile (stx : Syntax) : MetaM Expr := do
-  let (expr, _) ← (elabStmt stx).run 1
+  let expr ← elabStmt stx
+  let expr ← mkAppM ``Stmt.build #[expr]
   return expr
 
-elab "(while|" p:while_stmt ")" : term => elabWhile p
+elab "(While|" p:while_stmt ")" : term => elabWhile p
 
-#reduce (while|
+#reduce (While|
   y := x;
   z := y;
   while y > 1 do (

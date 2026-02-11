@@ -8,10 +8,10 @@ namespace ProgramAnalysis.ControlFlowAnalysis.Example
 open ProgramAnalysis.ControlFlowAnalysis Fun
 
 -- Example in lecture
-def expr1 : Expr := (fun|(fn x => x)(fn y => y))
+def expr1 : Expr := (Fun|(fn x => x)(fn y => y))
 
 -- Tutorial Sheet 4, Exercise 1
-def expr2 : Expr := (fun|
+def expr2 : Expr := (Fun|
   let f₁ = fn x₁ => x₁ in
   let f₂ = fn x₂ => x₂ in
   (f₁ f₂) (fn y => y)

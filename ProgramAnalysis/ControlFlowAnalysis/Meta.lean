@@ -70,12 +70,12 @@ public meta partial def elabTerm : Syntax → MetaM Lean.Expr
   | `(fun_term| ($e:fun_term)) => elabTerm e
   | _ => throwUnsupportedSyntax
 
-elab "(fun|" p:fun_term ")" : term => do
+elab "(Fun|" p:fun_term ")" : term => do
   let pExpr ← elabTerm p
   let pExpr ← mkAppM ``Expr.build #[pExpr]
   return pExpr
 
-#reduce (fun|(fn x => x)(fn y => y))
+#reduce (Fun|(fn x => x)(fn y => y))
 
 end ProgramAnalysis.ControlFlowAnalysis.Fun.Meta
 end
