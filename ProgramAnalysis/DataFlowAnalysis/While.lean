@@ -42,7 +42,7 @@ public inductive BoolAtom
 deriving Repr, Ord
 
 public inductive Stmt
-  | assign : Var → ArithAtom →  Label → Stmt
+  | assign : Var → ArithAtom → Label → Stmt
   | skip : Label → Stmt
   | seq : Stmt → Stmt → Stmt
   | sif : BoolAtom → Label → Stmt → Stmt → Stmt
