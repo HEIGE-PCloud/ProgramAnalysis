@@ -1,5 +1,7 @@
 module
 
+namespace ProgramAnalysis.DataFlowAnalysis.While
+
 public abbrev Var := String
 
 public abbrev Label := Nat
@@ -27,7 +29,7 @@ deriving Repr, Ord
 
 public inductive ArithAtom
   | var : Var → ArithAtom
-  | const : Int → ArithAtom
+  | const : Nat → ArithAtom
   | op : Op_a → ArithAtom → ArithAtom → ArithAtom
 deriving Repr, Ord
 
@@ -112,3 +114,5 @@ example : Stmt := .build <|
     (mkSeq (mkAssign "z" (op times (var "z") (var "y")))
             (mkAssign "y" (op minus (var "y") (const 1)))))
   (mkAssign "y" (const 0))))
+
+end ProgramAnalysis.DataFlowAnalysis.While
