@@ -127,9 +127,9 @@ private meta def elabWhile (stx : Syntax) : MetaM Expr := do
   let (expr, _) ← (elabStmt stx).run 1
   return expr
 
-elab "[while|" p:while_stmt "]" : term => elabWhile p
+elab "(while|" p:while_stmt ")" : term => elabWhile p
 
-#reduce [while|
+#reduce (while|
   y := x;
   z := y;
   while y > 1 do (
@@ -137,7 +137,7 @@ elab "[while|" p:while_stmt "]" : term => elabWhile p
     y := y - 1
   );
   y := 0
-]
+)
 
 
 end ProgramAnalysis.ControlFlowAnalysis.While.Meta
