@@ -3,6 +3,7 @@ module
 public import Lean
 public import ProgramAnalysis.ControlFlowAnalysis.Fun
 
+public section
 namespace ProgramAnalysis.ControlFlowAnalysis.Fun.Meta
 
 open Lean Elab Meta ProgramAnalysis.ControlFlowAnalysis.Fun
@@ -29,7 +30,7 @@ syntax fun_term fun_op fun_term : fun_term
 syntax "let" ident "=" fun_term "in" fun_term : fun_term
 syntax "(" fun_term ")" : fun_term
 
-meta def elabOp : Syntax → MetaM Lean.Expr
+public meta def elabOp : Syntax → MetaM Lean.Expr
   | `(fun_op| +) => return .const ``Op.plus []
   | `(fun_op| -) => return .const ``Op.minus []
   | `(fun_op| *) => return .const ``Op.times []
@@ -42,7 +43,7 @@ meta def elabOp : Syntax → MetaM Lean.Expr
   | `(fun_op| !=) => return .const ``Op.neq []
   | _ => throwUnsupportedSyntax
 
-meta partial def elabTerm : Syntax → MetaM Lean.Expr
+public meta partial def elabTerm : Syntax → MetaM Lean.Expr
   | `(fun_term| $n:num) => mkAppM ``Expr.mkConst #[mkNatLit n.getNat]
   | `(fun_term| $x:ident) => mkAppM ``Expr.mkVar #[mkStrLit x.getId.toString]
   | `(fun_term| fn $x:ident => $e:fun_term) => do
@@ -77,3 +78,4 @@ elab "(fun|" p:fun_term ")" : term => do
 #reduce (fun|(fn x => x)(fn y => y))
 
 end ProgramAnalysis.ControlFlowAnalysis.Fun.Meta
+end
