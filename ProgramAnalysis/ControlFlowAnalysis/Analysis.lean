@@ -49,7 +49,7 @@ public def Constraint.pp : Constraint → String
   | .literal t rhs => s!"{t.pp} ⊆ {rhs.pp}"
   | .conditional t rhs' lhs rhs => s!"{t.pp} ⊆ {rhs'.pp} => {lhs.pp} ⊆ {rhs.pp}"
 
-public def allFns : Expr → List FnTerm
+public def Fun.Expr.allFns : Expr → List FnTerm
 | .e term _ => match term with
   | .c _ => []
   | .x _ => []
@@ -59,7 +59,7 @@ public def allFns : Expr → List FnTerm
   | .op _ t1 t2 => allFns t1 ++ allFns t2
   | .letin _ t1 t2 => allFns t1 ++ allFns t2
 
-public def constraints : Expr → ReaderM (List FnTerm) (Set Constraint)
+public def Fun.Expr.constraints : Expr → ReaderM (List FnTerm) (Set Constraint)
   | .e term label => match term with
     | .c _ => pure ∅
     | .x x => pure {(.subset (.env x) (.cache label))}
