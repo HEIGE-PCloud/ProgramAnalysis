@@ -3,6 +3,7 @@ module
 public import Lean
 public import ProgramAnalysis.DataFlowAnalysis.While
 
+public section
 namespace ProgramAnalysis.ControlFlowAnalysis.While.Meta
 
 open Lean Elab Meta ProgramAnalysis.DataFlowAnalysis.While
@@ -118,7 +119,7 @@ meta partial def elabStmt : Syntax → MetaM Expr
     mkAppM ``Stmt.mkWhile #[bExpr, sExpr]
   | _ => throwUnsupportedSyntax
 
-private meta def elabWhile (stx : Syntax) : MetaM Expr := do
+meta def elabWhile (stx : Syntax) : MetaM Expr := do
   let expr ← elabStmt stx
   let expr ← mkAppM ``Stmt.build #[expr]
   return expr
@@ -135,5 +136,5 @@ elab "(While|" p:while_stmt ")" : term => elabWhile p
   y := 0
 )
 
-
 end ProgramAnalysis.ControlFlowAnalysis.While.Meta
+end

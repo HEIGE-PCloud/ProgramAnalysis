@@ -30,7 +30,7 @@ syntax fun_term fun_op fun_term : fun_term
 syntax "let" ident "=" fun_term "in" fun_term : fun_term
 syntax "(" fun_term ")" : fun_term
 
-public meta def elabOp : Syntax → MetaM Lean.Expr
+meta def elabOp : Syntax → MetaM Lean.Expr
   | `(fun_op| +) => return .const ``Op.plus []
   | `(fun_op| -) => return .const ``Op.minus []
   | `(fun_op| *) => return .const ``Op.times []
@@ -43,7 +43,7 @@ public meta def elabOp : Syntax → MetaM Lean.Expr
   | `(fun_op| !=) => return .const ``Op.neq []
   | _ => throwUnsupportedSyntax
 
-public meta partial def elabTerm : Syntax → MetaM Lean.Expr
+meta partial def elabTerm : Syntax → MetaM Lean.Expr
   | `(fun_term| $n:num) => mkAppM ``Expr.mkConst #[mkNatLit n.getNat]
   | `(fun_term| $x:ident) => mkAppM ``Expr.mkVar #[mkStrLit x.getId.toString]
   | `(fun_term| fn $x:ident => $e:fun_term) => do
