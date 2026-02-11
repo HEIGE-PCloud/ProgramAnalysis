@@ -26,6 +26,9 @@ public abbrev Label := Nat
 
 public abbrev Var := String
 
+public abbrev Set α (cmp := by exact compare) := Std.TreeSet α cmp
+public abbrev Map α β (cmp := by exact compare) := Std.TreeMap α β cmp
+
 public inductive Op
   | plus
   | minus
@@ -191,7 +194,7 @@ public def Expr.allFns : Expr → List FnTerm
   | .op _ t1 t2 => allFns t1 ++ allFns t2
   | .letin _ t1 t2 => allFns t1 ++ allFns t2
 
-public def Expr.constraints : Expr → ReaderM (List FnTerm) (Std.TreeSet Constraint)
+public def Expr.constraints : Expr → ReaderM (List FnTerm) (Set Constraint)
   | .e term label => match term with
     | .c _ => pure ∅
     | .x x => pure {(.subset (.env x) (.cache label))}
@@ -230,18 +233,18 @@ public def Constraint.nodes : Constraint → List Node
   | .literal _ rhs => [rhs]
   | .conditional _ rhs' lhs rhs => [rhs', lhs, rhs]
 
-public def Constraint.solve (constraints: List Constraint) : Std.TreeMap Node (Std.TreeSet FnTerm) := Id.run do
+public def Constraint.solve (constraints: List Constraint) : Map Node (Set FnTerm) := Id.run do
   let nodes : List Node := (constraints.map Constraint.nodes).flatten
-  let mut D : Std.TreeMap Node (Std.TreeSet FnTerm) := {}
-  let mut E : Std.TreeMap Node (List Constraint) := {}
+  let mut D : Map Node (Set FnTerm) := {}
+  let mut E : Map Node (List Constraint) := {}
   let mut W : List Node := []
 
   let add
-    (D : Std.TreeMap Node (Std.TreeSet FnTerm))
+    (D : Map Node (Set FnTerm))
     (W : List Node)
     (q : Node)
-    (d: Std.TreeSet FnTerm) :
-    Std.TreeMap Node (Std.TreeSet FnTerm) × List Node :=
+    (d: Set FnTerm) :
+    Map Node (Set FnTerm) × List Node :=
     if !(d.subset D[q]!) then
       ⟨D.insert q (d ∪ D[q]!), q :: W⟩
     else
