@@ -63,3 +63,52 @@ example : Stmt :=
     (assign "z" (op times (var "z") (var "y")) 4)
     (assign "y" (op minus (var "y") (const 1)) 5)))
   (Stmt.assign "y" (const 0) 6))))
+
+def freshLabel : StateM Label Label := do
+  let n ← get
+  set (n + 1)
+  return n
+
+public def Stmt.mkAssign (x : Var) (a : ArithAtom) : StateM Label Stmt := do
+  let l ← freshLabel
+  return Stmt.assign x a l
+
+public def Stmt.mkSkip : StateM Label Stmt := do
+  let l ← freshLabel
+  return Stmt.skip l
+
+public def Stmt.mkSeq (s1 s2 : StateM Label Stmt) : StateM Label Stmt := do
+  let a ← s1
+  let b ← s2
+  return Stmt.seq a b
+
+public def Stmt.mkIf (b : BoolAtom) (thn els : StateM Label Stmt) : StateM Label Stmt := do
+  let l ← freshLabel
+  let t ← thn
+  let e ← els
+  return Stmt.sif b l t e
+
+public def Stmt.mkWhile (b : BoolAtom) (body : StateM Label Stmt) : StateM Label Stmt := do
+  let l ← freshLabel
+  let s ← body
+  return Stmt.swhile b l s
+
+public def Stmt.build (m : StateM Label Stmt) : Stmt :=
+  (m.run 1).1
+
+/--
+[y := x]¹;
+[z := y]²;
+while [y > 1]³ do
+  [z := z * y]⁴;
+  [y := y - 1]⁵;
+[y := 0]⁶
+-/
+example : Stmt := .build <|
+  open Op_a Op_r ArithAtom BoolAtom Stmt in
+  mkSeq (mkAssign "x" (var "y"))
+  (mkSeq (mkAssign "y" (var "z"))
+  (mkSeq (mkWhile (rel gt (var "y") (const 1))
+    (mkSeq (mkAssign "z" (op times (var "z") (var "y")))
+            (mkAssign "y" (op minus (var "y") (const 1)))))
+  (mkAssign "y" (const 0))))
