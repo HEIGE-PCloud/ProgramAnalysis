@@ -135,7 +135,7 @@ public inductive Block
   | assign : Var → ArithAtom → Label → Block
   | skip : Label → Block
   | test : BoolAtom → Label → Block
-deriving DecidableEq
+deriving DecidableEq, Inhabited
 
 @[grind]
 public def Block.label : Block → Label
@@ -150,6 +150,12 @@ public def Stmt.blocks : Stmt → List Block
   | .seq s1 s2 => s1.blocks ++ s2.blocks
   | .sif b l s1 s2 => [.test b l] ++ s1.blocks ++ s2.blocks
   | .swhile b l s => [.test b l] ++ s.blocks
+
+public def Stmt.block? (s : Stmt) (l : Label) : Option Block :=
+  s.blocks.find? (·.label == l)
+
+public def Stmt.block! (s : Stmt) (l : Label) : Block :=
+  (s.block? l).get!
 
 @[grind]
 public def Stmt.labels (s : Stmt) : List Label := s.blocks.map Block.label
