@@ -23,6 +23,6 @@ def init := chaoticIter (chaoticInit equations) equations
 
 -- FIXME: this is not correct
 def solution := chaoticIters equations
-#eval solution
+#eval solution.toList.map (fun (k, v) => s!"{k.pp} = {v.toList.map (fun a: AExp => a.pp)}")
 
 end ProgramAnalysis.DataFlowAnalysis.Example

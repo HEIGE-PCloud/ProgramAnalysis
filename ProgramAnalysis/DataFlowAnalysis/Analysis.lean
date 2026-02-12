@@ -43,7 +43,7 @@ public structure EquationAtom where
   ty : EquationType
 deriving BEq, Repr, Ord
 
-public def EquationAtom.pp (e : EquationAtom) : String := s!"AE{e.ty.pp} ({e.label})"
+public def EquationAtom.pp (e : EquationAtom) : String := s!"AE{e.ty.pp}({e.label})"
 
 public inductive SetExpr where
   | empty : SetExpr
@@ -66,6 +66,7 @@ public def SetExpr.pp : SetExpr → String
 
 public def inters : List SetExpr → SetExpr
   | [] => .empty
+  | x :: y :: [] => .inter x y
   | x :: xs => .inter x (inters xs)
 
 public structure Equation where
