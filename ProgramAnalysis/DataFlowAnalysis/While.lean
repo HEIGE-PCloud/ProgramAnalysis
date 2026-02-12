@@ -115,4 +115,46 @@ example : Stmt := .build <|
             (mkAssign "y" (op minus (var "y") (const 1)))))
   (mkAssign "y" (const 0))))
 
+def Stmt.init : Stmt → Label
+  | .assign _ _ l => l
+  | .skip l => l
+  | .seq s _ => s.init
+  | .sif _ l _ _ => l
+  | .swhile _ l _ => l
+
+def Stmt.final : Stmt → List Label
+  | .assign _ _ l => [l]
+  | .skip l => [l]
+  | .seq _ s => s.final
+  | .sif _ _ s1 s2 => s1.final ++ s2.final
+  | .swhile _ l _ => [l]
+
+inductive Block
+  | assign : Var → ArithAtom → Label → Block
+  | skip : Label → Block
+  | test : BoolAtom → Label → Block
+
+def Block.label : Block → Label
+  | .assign _ _ l => l
+  | .skip l => l
+  | .test _ l => l
+
+def Stmt.blocks : Stmt → List Block
+  | .assign x a l => [.assign x a l]
+  | .skip l => [.skip l]
+  | .seq s1 s2 => s1.blocks ++ s2.blocks
+  | .sif b l s1 s2 => [.test b l] ++ s1.blocks ++ s2.blocks
+  | .swhile b l s => [.test b l] ++ s.blocks
+
+def Stmt.labels (s : Stmt) : List Label := s.blocks.map Block.label
+
+theorem init_S_in_labels_S : ∀ s : Stmt, s.labels.elem s.init := by
+  intro s
+  induction s <;> grind [Stmt.init, Stmt.labels, Stmt.blocks, Block.label]
+
+theorem final_S_in_labels_S : ∀ s : Stmt, ∀ l : Label, s.final.elem l → s.labels.elem l := by
+  intro s
+  induction s <;> grind [Stmt.final, Stmt.labels, Stmt.blocks, Block.label]
+
+
 end ProgramAnalysis.DataFlowAnalysis.While
