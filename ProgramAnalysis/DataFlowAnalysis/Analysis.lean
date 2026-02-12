@@ -25,33 +25,44 @@ def gen' : Block → ReaderM Stmt (List AExp)
 
 def gen (s : Stmt) (b : Block) : List AExp := (gen' b).run s
 
-inductive EquationType
+public inductive EquationType
   | entry
   | exit
-deriving BEq
+deriving BEq, Repr
 
-structure EquationAtom where
+def EquationType.pp (e : EquationType) : String :=
+  match e with
+    | entry => "entry"
+    | exit => "exit"
+
+public structure EquationAtom where
   label : Label
   ty : EquationType
-deriving BEq
+deriving BEq, Repr
 
-inductive SetEquation where
+def EquationAtom.pp (e : EquationAtom) : String := s!"AE {e.ty.pp} ({e.label})"
+
+public inductive SetEquation where
   | empty : SetEquation
   | var : EquationAtom → SetEquation
   | list : List AExp → SetEquation
   | union : SetEquation → SetEquation → SetEquation
   | inter : SetEquation → SetEquation → SetEquation
   | diff : SetEquation → SetEquation → SetEquation
+deriving Repr
 
-def inters : List SetEquation → SetEquation
+-- def SetEquation.pp : SetEquation → String
+
+public def inters : List SetEquation → SetEquation
   | [] => .empty
   | x :: xs => .inter x (inters xs)
 
-structure Equation where
+public structure Equation where
   lhs : EquationAtom
   rhs : SetEquation
+deriving Repr
 
-def Equation.build (s : Stmt) (l : Label) (ty : EquationType) : Equation :=
+public def Equation.build (s : Stmt) (l : Label) (ty : EquationType) : Equation :=
   let lhs := EquationAtom.mk l ty
   let b := s.block! l
   match ty with
@@ -61,7 +72,7 @@ def Equation.build (s : Stmt) (l : Label) (ty : EquationType) : Equation :=
       ⟨lhs, inters (s.flow.map (fun (_l, l') => .var (EquationAtom.mk l' .exit)))⟩
     | .exit => ⟨lhs, .union (.diff (.var ⟨l, .entry⟩) (.list (kill s b))) (.list (gen s b))⟩
 
-def Equation.buildAll (s : Stmt) : List Equation :=
+public def Equation.buildAll (s : Stmt) : List Equation :=
   s.labels.flatMap (fun l => [Equation.build s l .entry, Equation.build s l .exit])
 
 end AvailableExpression
