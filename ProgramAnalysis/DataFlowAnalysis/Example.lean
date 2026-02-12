@@ -15,13 +15,14 @@ def example1 : Stmt := [While|
   )
 ]
 
+#eval example1
+
 def equations := Equation.buildAll example1
 #eval equations.map (fun eq => eq.pp)
 
 def init := chaoticIter (chaoticInit equations) equations
 #eval init
 
--- FIXME: this is not correct
 def solution := chaoticIters equations
 #eval solution.toList.map (fun (k, v) => s!"{k.pp} = {v.toList.map (fun a: AExp => a.pp)}")
 

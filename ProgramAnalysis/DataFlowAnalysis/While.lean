@@ -224,48 +224,30 @@ public def BoolAtom.FV : BoolAtom → List Var
   | .rel _ b1 b2 => b1.FV ++ b2.FV
 
 public inductive AExp
-  | aop : Op_a → ArithAtom → ArithAtom → AExp
-  | bnot : BoolAtom → AExp
-  | bop : Op_b → BoolAtom → BoolAtom → AExp
-  | rop : Op_r → ArithAtom → ArithAtom → AExp
+  | op : Op_a → ArithAtom → ArithAtom → AExp
 deriving Repr, BEq, Ord
 
 public def AExp.pp : AExp → String
-  | .aop o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
-  | .bnot b => s!"(¬{b.pp})"
-  | .bop o b1 b2 => s!"({b1.pp} {o.pp} {b2.pp})"
-  | .rop o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
+  | op o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
 
 @[grind]
 public def AExp.FV : AExp → List Var
-  | .aop _ a1 a2 => a1.FV ++ a2.FV
-  | .bnot b => b.FV
-  | .bop _ b1 b2 => b1.FV ++ b2.FV
-  | .rop _ a1 a2 => a1.FV ++ a2.FV
+  | op _ a1 a2 => a1.FV ++ a2.FV
 
 @[grind]
 public def Stmt.labelConsistent (B₁ B₂ : Block) : Prop := B₁.label = B₂.label → B₁ = B₂
-
 
 @[grind]
 public def ArithAtom.aexp : ArithAtom → List AExp
   | .var _ => []
   | .const _ => []
-  | .op o x y => [.aop o x y] ++ x.aexp ++ y.aexp
-
-@[grind]
-public def BoolAtom.aexp : BoolAtom → List AExp
-  | .btrue => []
-  | .bfalse => []
-  | .not x => [.bnot x] ++ x.aexp
-  | .op o x y => [.bop o x y] ++ x.aexp ++ y.aexp
-  | .rel o x y => [.rop o x y] ++ x.aexp ++ y.aexp
+  | .op o x y => [.op o x y] ++ x.aexp ++ y.aexp
 
 @[grind]
 public def Stmt.aexp : Stmt → List AExp
   | .assign _ a _ => a.aexp
-  | swhile b _ s => b.aexp ++ s.aexp
-  | sif b _ s1 s2 => b.aexp ++ s1.aexp ++ s2.aexp
+  | swhile _ _ s => s.aexp
+  | sif _ _ s1 s2 => s1.aexp ++ s2.aexp
   | seq s1 s2 => s1.aexp ++ s2.aexp
   | skip _ => []
 

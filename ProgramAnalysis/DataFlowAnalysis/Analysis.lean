@@ -24,7 +24,7 @@ def kill (s : Stmt) (b : Block) : List AExp := (kill' b).run s
 def gen' : Block → ReaderM Stmt (List AExp)
   | .assign x a _ => pure (a.aexp.filter (fun a' => !(a'.FV.elem x)))
   | .skip _ => pure []
-  | .test b _ => pure b.aexp
+  | .test _ _ => pure []
 
 def gen (s : Stmt) (b : Block) : List AExp := (gen' b).run s
 
@@ -66,7 +66,7 @@ public def SetExpr.pp : SetExpr → String
 
 public def inters : List SetExpr → SetExpr
   | [] => .empty
-  | x :: y :: [] => .inter x y
+  | x :: [] => x
   | x :: xs => .inter x (inters xs)
 
 public structure Equation where
