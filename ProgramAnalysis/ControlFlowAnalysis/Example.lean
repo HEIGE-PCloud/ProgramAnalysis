@@ -17,7 +17,14 @@ def expr2 : Expr := [Fun|
   (f₁ f₂) (fn y => y)
 ]
 
-def expr := expr2
+-- Tutorial Sheet 4, Exercise 2
+def expr3 : Expr := [Fun|
+  (let f = (fn x => (if (x > 0) then (fn y => y)
+                    else (fn z => 25)))
+  in ((f 3) 0))
+]
+
+def expr := expr3
 
 #eval expr.pp
 
@@ -25,24 +32,10 @@ def expr := expr2
 
 def example.constraint := expr.constraints.run expr.allFns
 
-/-
-["C(2) ⊆ r(f₁)", "C(4) ⊆ r(f₂)", "C(10) ⊆ C(11)", "C(11) ⊆ C(12)", "r(f₁) ⊆ C(5)", "r(f₂) ⊆ C(6)", "r(x₁) ⊆ C(1)",
-  "r(x₂) ⊆ C(3)", "r(y) ⊆ C(8)", "fn x₁ => x₁¹ ⊆ C(2)", "fn x₂ => x₂³ ⊆ C(4)", "fn y => y⁸ ⊆ C(9)",
-  "fn x₁ => x₁¹ ⊆ C(5) => C(1) ⊆ C(7)", "fn x₁ => x₁¹ ⊆ C(5) => C(6) ⊆ r(x₁)", "fn x₁ => x₁¹ ⊆ C(7) => C(1) ⊆ C(10)",
-  "fn x₁ => x₁¹ ⊆ C(7) => C(9) ⊆ r(x₁)", "fn x₂ => x₂³ ⊆ C(5) => C(3) ⊆ C(7)", "fn x₂ => x₂³ ⊆ C(5) => C(6) ⊆ r(x₂)",
-  "fn x₂ => x₂³ ⊆ C(7) => C(3) ⊆ C(10)", "fn x₂ => x₂³ ⊆ C(7) => C(9) ⊆ r(x₂)", "fn y => y⁸ ⊆ C(5) => C(6) ⊆ r(y)",
-  "fn y => y⁸ ⊆ C(5) => C(8) ⊆ C(7)", "fn y => y⁸ ⊆ C(7) => C(8) ⊆ C(10)", "fn y => y⁸ ⊆ C(7) => C(9) ⊆ r(y)"]
--/
 #eval example.constraint.toList.map (fun c => c.pp)
 
 def example.solution := Constraint.solve example.constraint.toList
 
-/-
-["C(1) ↦ [fn x₂ => x₂³]", "C(2) ↦ [fn x₁ => x₁¹]", "C(3) ↦ [fn y => y⁸]", "C(4) ↦ [fn x₂ => x₂³]",
-  "C(5) ↦ [fn x₁ => x₁¹]", "C(6) ↦ [fn x₂ => x₂³]", "C(7) ↦ [fn x₂ => x₂³]", "C(8) ↦ []", "C(9) ↦ [fn y => y⁸]",
-  "C(10) ↦ [fn y => y⁸]", "C(11) ↦ [fn y => y⁸]", "C(12) ↦ [fn y => y⁸]", "r(f₁) ↦ [fn x₁ => x₁¹]",
-  "r(f₂) ↦ [fn x₂ => x₂³]", "r(x₁) ↦ [fn x₂ => x₂³]", "r(x₂) ↦ [fn y => y⁸]", "r(y) ↦ []"]
--/
 #eval example.solution.toList.map (fun (node, value) => s!"{node.pp} ↦ {value.toList.map (fun t: FnTerm => t.pp)}")
 
 end ProgramAnalysis.ControlFlowAnalysis.Example

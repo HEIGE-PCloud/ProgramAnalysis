@@ -45,8 +45,6 @@ def Op.pp : Op → String
   | .ge => ">="
   | .neq => "!="
 
-def x := Nat.zero
-
 public section -- See: https://github.com/leanprover/lean4/issues/10067
 mutual
 public inductive Expr
