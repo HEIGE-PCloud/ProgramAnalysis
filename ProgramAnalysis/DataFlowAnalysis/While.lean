@@ -174,6 +174,56 @@ public def Stmt.flow : Stmt → List (Label × Label)
 public def Stmt.flowR : Stmt → List (Label × Label) := (.map (fun (x, y) => (y, x))) ∘ Stmt.flow
 
 @[grind]
+public def ArithAtom.FV : ArithAtom → List Var
+  | .var x => [x]
+  | .const _ => []
+  | .op _ x y => x.FV ++ y.FV
+
+@[grind]
+public def BoolAtom.FV : BoolAtom → List Var
+  | .bfalse => []
+  | .btrue => []
+  | .not b => b.FV
+  | .op _ b1 b2 => b1.FV ++ b2.FV
+  | .rel _ b1 b2 => b1.FV ++ b2.FV
+
+public inductive AExp
+  | aop : Op_a → ArithAtom → ArithAtom → AExp
+  | bnot : BoolAtom → AExp
+  | bop : Op_b → BoolAtom → BoolAtom → AExp
+  | rop : Op_r → ArithAtom → ArithAtom → AExp
+
+@[grind]
+public def AExp.FV : AExp → List Var
+  | .aop _ a1 a2 => a1.FV ++ a2.FV
+  | .bnot b => b.FV
+  | .bop _ b1 b2 => b1.FV ++ b2.FV
+  | .rop _ a1 a2 => a1.FV ++ a2.FV
+
+@[grind]
 public def Stmt.labelConsistent (B₁ B₂ : Block) : Prop := B₁.label = B₂.label → B₁ = B₂
+
+
+@[grind]
+public def ArithAtom.aexp : ArithAtom → List AExp
+  | .var _ => []
+  | .const _ => []
+  | .op o x y => [.aop o x y] ++ x.aexp ++ y.aexp
+
+@[grind]
+public def BoolAtom.aexp : BoolAtom → List AExp
+  | .btrue => []
+  | .bfalse => []
+  | .not x => [.bnot x] ++ x.aexp
+  | .op o x y => [.bop o x y] ++ x.aexp ++ y.aexp
+  | .rel o x y => [.rop o x y] ++ x.aexp ++ y.aexp
+
+@[grind]
+public def Stmt.aexp : Stmt → List AExp
+  | .assign _ a _ => a.aexp
+  | swhile b _ s => b.aexp ++ s.aexp
+  | sif b _ s1 s2 => b.aexp ++ s1.aexp ++ s2.aexp
+  | seq s1 s2 => s1.aexp ++ s2.aexp
+  | skip _ => []
 
 end ProgramAnalysis.DataFlowAnalysis.While
