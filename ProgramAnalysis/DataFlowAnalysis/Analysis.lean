@@ -43,7 +43,7 @@ public structure EquationAtom where
   ty : EquationType
 deriving BEq, Repr, Ord
 
-def EquationAtom.pp (e : EquationAtom) : String := s!"AE {e.ty.pp} ({e.label})"
+public def EquationAtom.pp (e : EquationAtom) : String := s!"AE{e.ty.pp} ({e.label})"
 
 public inductive SetExpr where
   | empty : SetExpr
@@ -54,6 +54,16 @@ public inductive SetExpr where
   | diff : SetExpr → SetExpr → SetExpr
 deriving Repr
 
+public def SetExpr.pp : SetExpr → String
+  | .empty => "∅"
+  | .var atom => atom.pp
+  | .lit s =>
+    let elems := String.intercalate ", " (s.toList.map (fun a => a.pp))
+    "{" ++ elems ++ "}"
+  | .union a b => s!"({a.pp} ∪ {b.pp})"
+  | .inter a b => s!"({a.pp} ∩ {b.pp})"
+  | .diff a b => s!"({a.pp} \\ {b.pp})"
+
 public def inters : List SetExpr → SetExpr
   | [] => .empty
   | x :: xs => .inter x (inters xs)
@@ -62,6 +72,9 @@ public structure Equation where
   lhs : EquationAtom
   rhs : SetExpr
 deriving Repr
+
+public def Equation.pp : Equation → String
+  | ⟨lhs, rhs⟩ => s!"{lhs.pp} = {rhs.pp}"
 
 public def Equation.build (s : Stmt) (l : Label) (ty : EquationType) : Equation :=
   let lhs := EquationAtom.mk l ty

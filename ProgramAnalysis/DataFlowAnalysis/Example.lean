@@ -16,7 +16,7 @@ def example1 : Stmt := [While|
 ]
 
 def equations := Equation.buildAll example1
-#eval equations
+#eval equations.map (fun eq => eq.pp)
 
 def init := chaoticIter (chaoticInit equations) equations
 #eval init

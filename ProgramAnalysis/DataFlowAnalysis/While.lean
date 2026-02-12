@@ -13,10 +13,20 @@ public inductive Op_a
   | div
 deriving Repr, Ord, DecidableEq
 
+def Op_a.pp : Op_a → String
+  | .plus => "+"
+  | .minus => "-"
+  | .times => "*"
+  | .div => "/"
+
 public inductive Op_b
   | and
   | or
 deriving Repr, Ord, DecidableEq
+
+def Op_b.pp : Op_b → String
+  | .and => "∧"
+  | .or => "∨"
 
 public inductive Op_r
   | eq
@@ -27,11 +37,24 @@ public inductive Op_r
   | neq
 deriving Repr, Ord, DecidableEq
 
+def Op_r.pp : Op_r → String
+  | .eq => "="
+  | .lt => "<"
+  | .gt => ">"
+  | .le => "≤"
+  | .ge => "≥"
+  | .neq => "≠"
+
 public inductive ArithAtom
   | var : Var → ArithAtom
   | const : Nat → ArithAtom
   | op : Op_a → ArithAtom → ArithAtom → ArithAtom
 deriving Repr, Ord, DecidableEq
+
+def ArithAtom.pp : ArithAtom → String
+  | .var x => x
+  | .const n => toString n
+  | .op o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
 
 public inductive BoolAtom
   | btrue : BoolAtom
@@ -40,6 +63,13 @@ public inductive BoolAtom
   | op : Op_b → BoolAtom → BoolAtom → BoolAtom
   | rel : Op_r → ArithAtom → ArithAtom → BoolAtom
 deriving Repr, Ord, DecidableEq
+
+def BoolAtom.pp : BoolAtom → String
+  | .btrue => "true"
+  | .bfalse => "false"
+  | .not b => s!"(¬{b.pp})"
+  | .op o b1 b2 => s!"({b1.pp} {o.pp} {b2.pp})"
+  | .rel o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
 
 public inductive Stmt
   | assign : Var → ArithAtom → Label → Stmt
@@ -199,6 +229,12 @@ public inductive AExp
   | bop : Op_b → BoolAtom → BoolAtom → AExp
   | rop : Op_r → ArithAtom → ArithAtom → AExp
 deriving Repr, BEq, Ord
+
+public def AExp.pp : AExp → String
+  | .aop o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
+  | .bnot b => s!"(¬{b.pp})"
+  | .bop o b1 b2 => s!"({b1.pp} {o.pp} {b2.pp})"
+  | .rop o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
 
 @[grind]
 public def AExp.FV : AExp → List Var
