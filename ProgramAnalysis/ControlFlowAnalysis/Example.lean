@@ -21,11 +21,19 @@ def expr := expr2
 
 #eval expr.pp
 
-def example.constraint := (expr.constraints).run (expr.allFns)
+def example.constraint := expr.constraints.run expr.allFns
 
+/-
+["C(2) ⊆ r(f₁)", "C(4) ⊆ r(f₂)", "C(10) ⊆ C(11)", "C(11) ⊆ C(12)", "r(f₁) ⊆ C(5)", "r(f₂) ⊆ C(6)", "r(x₁) ⊆ C(1)",
+  "r(x₂) ⊆ C(3)", "r(y) ⊆ C(8)", "fn x₁ => x₁¹ ⊆ C(2)", "fn x₂ => x₂³ ⊆ C(4)", "fn y => y⁸ ⊆ C(9)",
+  "fn x₁ => x₁¹ ⊆ C(5) => C(1) ⊆ C(7)", "fn x₁ => x₁¹ ⊆ C(5) => C(6) ⊆ r(x₁)", "fn x₁ => x₁¹ ⊆ C(7) => C(1) ⊆ C(10)",
+  "fn x₁ => x₁¹ ⊆ C(7) => C(9) ⊆ r(x₁)", "fn x₂ => x₂³ ⊆ C(5) => C(3) ⊆ C(7)", "fn x₂ => x₂³ ⊆ C(5) => C(6) ⊆ r(x₂)",
+  "fn x₂ => x₂³ ⊆ C(7) => C(3) ⊆ C(10)", "fn x₂ => x₂³ ⊆ C(7) => C(9) ⊆ r(x₂)", "fn y => y⁸ ⊆ C(5) => C(6) ⊆ r(y)",
+  "fn y => y⁸ ⊆ C(5) => C(8) ⊆ C(7)", "fn y => y⁸ ⊆ C(7) => C(8) ⊆ C(10)", "fn y => y⁸ ⊆ C(7) => C(9) ⊆ r(y)"]
+-/
 #eval example.constraint.toList.map (fun c => c.pp)
 
-def example.solution := ControlFlowAnalysis.Constraint.solve example.constraint.toList
+def example.solution := Constraint.solve example.constraint.toList
 
 /-
 ["C(1) ↦ [fn x₂ => x₂³]", "C(2) ↦ [fn x₁ => x₁¹]", "C(3) ↦ [fn y => y⁸]", "C(4) ↦ [fn x₂ => x₂³]",
