@@ -223,16 +223,18 @@ public def BoolAtom.FV : BoolAtom → List Var
   | .op _ b1 b2 => b1.FV ++ b2.FV
   | .rel _ b1 b2 => b1.FV ++ b2.FV
 
-public inductive AExp
-  | op : Op_a → ArithAtom → ArithAtom → AExp
+public structure AExp where
+  op : Op_a
+  lhs : ArithAtom
+  rhs : ArithAtom
 deriving Repr, BEq, Ord
 
 public def AExp.pp : AExp → String
-  | op o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
+  | ⟨o, a1, a2⟩ => s!"({a1.pp} {o.pp} {a2.pp})"
 
 @[grind]
 public def AExp.FV : AExp → List Var
-  | op _ a1 a2 => a1.FV ++ a2.FV
+  | ⟨_, a1, a2⟩ => a1.FV ++ a2.FV
 
 @[grind]
 public def Stmt.labelConsistent (B₁ B₂ : Block) : Prop := B₁.label = B₂.label → B₁ = B₂
@@ -241,7 +243,7 @@ public def Stmt.labelConsistent (B₁ B₂ : Block) : Prop := B₁.label = B₂.
 public def ArithAtom.aexp : ArithAtom → List AExp
   | .var _ => []
   | .const _ => []
-  | .op o x y => [.op o x y] ++ x.aexp ++ y.aexp
+  | .op o x y => [⟨o, x, y⟩] ++ x.aexp ++ y.aexp
 
 @[grind]
 public def Stmt.aexp : Stmt → List AExp
