@@ -142,4 +142,76 @@ public def Expr.build (m : StateM Label Expr) : Expr :=
 example : Expr := .build <|
   Expr.mkApp (Expr.mkFn "x" (Expr.mkVar "x")) (Expr.mkFn "y" (Expr.mkVar "y"))
 
+public section
+mutual
+structure Env where
+  env : List (Var × Value)
+deriving Repr
+
+inductive Value
+  | vNat : Nat → Value
+  | vBool : Bool → Value
+  | closure : Closure → Value
+deriving Repr
+
+structure Closure where
+  fn : Var × Expr
+  env : Env
+deriving Repr
+end
+end
+
+public def Closure.pp : Closure → String
+  | ⟨(x, e), _⟩ => s!"[(fn {x} => {e.pp})]"
+
+public def Value.pp : Value → String
+  | .vNat n => s!"{n}"
+  | .vBool b => s!"{b}"
+  | .closure c => s!"{c.pp}"
+
+def Value.getBool : Value → Option Bool
+  | .vBool b => .some b
+  | _ => .none
+
+def Op.eval (op : Op) (v₁ v₂: Value) : Option Value :=
+  match (v₁, op, v₂) with
+    | (.vNat x₁, .plus, .vNat x₂) => pure (.vNat (x₁ + x₂))
+    | (.vNat x₁, .minus, .vNat x₂) => pure (.vNat (x₁ - x₂))
+    | (.vNat x₁, .times, .vNat x₂) => pure (.vNat (x₁ * x₂))
+    | (.vNat x₁, .div, .vNat x₂) => pure (.vNat (x₁ / x₂))
+    | (.vNat x₁, .eq, .vNat x₂) => pure (.vBool (x₁ == x₂))
+    | (.vNat x₁, .neq, .vNat x₂) => pure (.vBool (x₁ != x₂))
+    | (.vNat x₁, .lt, .vNat x₂) => pure (.vBool (x₁ < x₂))
+    | (.vNat x₁, .le, .vNat x₂) => pure (.vBool (x₁ <= x₂))
+    | (.vNat x₁, .gt, .vNat x₂) => pure (.vBool (x₁ > x₂))
+    | (.vNat x₁, .ge, .vNat x₂) => pure (.vBool (x₁ >= x₂))
+    | _ => .none
+
+public partial def Expr.eval (ρ : Env) (e : Expr) : Option Value :=
+  match e with | .e t _ => match t with
+    | .c n => pure (.vNat n)
+    | .x x => ρ.env.lookup x
+    | .fn x t₀ => pure (.closure ⟨⟨x, t₀⟩, ρ⟩)
+    | .app t₁ t₂ => do
+      let v₁ ← eval ρ t₁
+      match v₁ with
+        | .closure ⟨(x, e₀), ρ'⟩ => do
+          let v₂ ← eval ρ t₂
+          eval ⟨ρ'.env.update x v₂⟩ e₀
+        | _ => .none
+    | .ite t₀ t₁ t₂ => do
+      let t ← eval ρ t₀
+      let b ← t.getBool
+      if b then eval ρ t₁ else eval ρ t₂
+    | .op op t₁ t₂ => do
+      let v₁ ← eval ρ t₁
+      let v₂ ← eval ρ t₂
+      op.eval v₁ v₂
+    | .letin x t₁ t₂ => do
+      let v₁ ← eval ρ t₁
+      eval ⟨ρ.env.update x v₁⟩ t₂
+
+example : Option Value := (Expr.build <|
+  Expr.mkApp (Expr.mkFn "x" (Expr.mkVar "x")) (Expr.mkFn "y" (Expr.mkVar "y"))).eval ⟨[]⟩
+
 end ProgramAnalysis.ControlFlowAnalysis.Fun

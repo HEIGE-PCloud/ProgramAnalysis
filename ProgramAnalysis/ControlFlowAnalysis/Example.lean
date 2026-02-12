@@ -21,6 +21,8 @@ def expr := expr2
 
 #eval expr.pp
 
+#eval Value.pp <$> (expr.eval ⟨[]⟩)
+
 def example.constraint := expr.constraints.run expr.allFns
 
 /-

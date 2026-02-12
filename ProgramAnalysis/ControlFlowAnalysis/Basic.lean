@@ -21,6 +21,11 @@ public def Nat.toSuperscript (n : Nat) : String := (toString n).map Char.toSuper
 public def Std.TreeSet.subset (s1 s2 : Std.TreeSet α cmp) : Bool :=
   s1.all s2.contains
 
+public def List.update [BEq α] (xs : List (α × β)) (x : α) (y : β) : List (α × β) :=
+  match xs with
+  | [] => [(x, y)]
+  | xy :: xys => if xy.fst == x then (x, y) :: xys else xy :: xys.update x y
+
 namespace ProgramAnalysis.ControlFlowAnalysis
 
 public abbrev Label := Nat
