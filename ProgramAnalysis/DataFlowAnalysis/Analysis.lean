@@ -68,9 +68,9 @@ public def Equation.build (s : Stmt) (l : Label) (ty : EquationType) : Equation 
   let b := s.block! l
   match ty with
     | .entry => if l = s.init then
-      ⟨lhs, .empty⟩
-    else
-      ⟨lhs, inters (s.flow.map (fun (_l, l') => .var (EquationAtom.mk l' .exit)))⟩
+        ⟨lhs, .empty⟩
+      else
+        ⟨lhs, inters ((s.flow.filter (fun (_, ll) => l == ll)).map (fun (l', l_) => .var (EquationAtom.mk l' .exit)))⟩
     | .exit => ⟨lhs, .union (.diff (.var ⟨l, .entry⟩) (.lit (.ofList (kill s b)))) (.lit (.ofList (gen s b)))⟩
 
 public def Equation.buildAll (s : Stmt) : List Equation :=

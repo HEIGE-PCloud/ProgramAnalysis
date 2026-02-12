@@ -18,6 +18,9 @@ def example1 : Stmt := [While|
 def equations := Equation.buildAll example1
 #eval equations
 
+def init := chaoticIter (chaoticInit equations) equations
+#eval init
+
 -- FIXME: this is not correct
 def solution := chaoticIters equations
 #eval solution
