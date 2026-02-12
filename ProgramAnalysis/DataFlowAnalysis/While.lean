@@ -192,6 +192,7 @@ public inductive AExp
   | bnot : BoolAtom → AExp
   | bop : Op_b → BoolAtom → BoolAtom → AExp
   | rop : Op_r → ArithAtom → ArithAtom → AExp
+deriving Repr, BEq
 
 @[grind]
 public def AExp.FV : AExp → List Var
