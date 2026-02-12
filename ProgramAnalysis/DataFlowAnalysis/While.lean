@@ -11,12 +11,12 @@ public inductive Op_a
   | minus
   | times
   | div
-deriving Repr, Ord
+deriving Repr, Ord, DecidableEq
 
 public inductive Op_b
   | and
   | or
-deriving Repr, Ord
+deriving Repr, Ord, DecidableEq
 
 public inductive Op_r
   | eq
@@ -25,13 +25,13 @@ public inductive Op_r
   | le
   | ge
   | neq
-deriving Repr, Ord
+deriving Repr, Ord, DecidableEq
 
 public inductive ArithAtom
   | var : Var → ArithAtom
   | const : Nat → ArithAtom
   | op : Op_a → ArithAtom → ArithAtom → ArithAtom
-deriving Repr, Ord
+deriving Repr, Ord, DecidableEq
 
 public inductive BoolAtom
   | btrue : BoolAtom
@@ -39,7 +39,7 @@ public inductive BoolAtom
   | not : BoolAtom → BoolAtom
   | op : Op_b → BoolAtom → BoolAtom → BoolAtom
   | rel : Op_r → ArithAtom → ArithAtom → BoolAtom
-deriving Repr, Ord
+deriving Repr, Ord, DecidableEq
 
 public inductive Stmt
   | assign : Var → ArithAtom → Label → Stmt
@@ -47,7 +47,7 @@ public inductive Stmt
   | seq : Stmt → Stmt → Stmt
   | sif : BoolAtom → Label → Stmt → Stmt → Stmt
   | swhile : BoolAtom → Label → Stmt → Stmt
-deriving Repr, Ord
+deriving Repr, Ord, DecidableEq
 
 /--
 [y := x]¹;
@@ -135,6 +135,7 @@ public inductive Block
   | assign : Var → ArithAtom → Label → Block
   | skip : Label → Block
   | test : BoolAtom → Label → Block
+deriving DecidableEq
 
 @[grind]
 public def Block.label : Block → Label
@@ -160,5 +161,19 @@ public theorem init_S_in_labels_S : ∀ s : Stmt, s.labels.elem s.init := by
 @[grind =]
 public theorem final_S_in_labels_S : ∀ s : Stmt, ∀ l : Label, s.final.elem l → s.labels.elem l := by
   intro s; induction s <;> grind [Stmt.final, Stmt.labels, Stmt.blocks, Block.label]
+
+@[grind]
+public def Stmt.flow : Stmt → List (Label × Label)
+  | .assign _ _ _ => []
+  | .skip _ => []
+  | .seq s1 s2 => s1.flow ++ s2.flow ++ (s1.final.map (·, s2.init))
+  | .sif _ l s1 s2 => s1.flow ++ s2.flow ++ [(l, s1.init), (l, s2.init)]
+  | .swhile _ l s => s.flow ++ [(l, s.init)] ++ (s.final.map (·, l))
+
+@[grind]
+public def Stmt.flowR : Stmt → List (Label × Label) := (.map (fun (x, y) => (y, x))) ∘ Stmt.flow
+
+@[grind]
+public def Stmt.labelConsistent (B₁ B₂ : Block) : Prop := B₁.label = B₂.label → B₁ = B₂
 
 end ProgramAnalysis.DataFlowAnalysis.While
