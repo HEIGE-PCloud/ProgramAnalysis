@@ -52,7 +52,7 @@ public inductive Expr
 deriving Repr, Ord
 
 public inductive Term
-  | c : Nat → Term
+  | c : Int → Term
   | x : Var → Term
   | fn : Var → Expr → Term
   | app : Expr → Expr → Term
@@ -147,7 +147,7 @@ structure Env where
 deriving Repr
 
 inductive Value
-  | vNat : Nat → Value
+  | vInt : Int → Value
   | vBool : Bool → Value
   | closure : Closure → Value
 deriving Repr
@@ -163,7 +163,7 @@ public def Closure.pp : Closure → String
   | ⟨(x, e), _⟩ => s!"[(fn {x} => {e.pp})]"
 
 public def Value.pp : Value → String
-  | .vNat n => s!"{n}"
+  | .vInt n => s!"{n}"
   | .vBool b => s!"{b}"
   | .closure c => s!"{c.pp}"
 
@@ -173,21 +173,21 @@ def Value.getBool : Value → Option Bool
 
 def Op.eval (op : Op) (v₁ v₂: Value) : Option Value :=
   match (v₁, op, v₂) with
-    | (.vNat x₁, .plus, .vNat x₂) => pure (.vNat (x₁ + x₂))
-    | (.vNat x₁, .minus, .vNat x₂) => pure (.vNat (x₁ - x₂))
-    | (.vNat x₁, .times, .vNat x₂) => pure (.vNat (x₁ * x₂))
-    | (.vNat x₁, .div, .vNat x₂) => pure (.vNat (x₁ / x₂))
-    | (.vNat x₁, .eq, .vNat x₂) => pure (.vBool (x₁ == x₂))
-    | (.vNat x₁, .neq, .vNat x₂) => pure (.vBool (x₁ != x₂))
-    | (.vNat x₁, .lt, .vNat x₂) => pure (.vBool (x₁ < x₂))
-    | (.vNat x₁, .le, .vNat x₂) => pure (.vBool (x₁ <= x₂))
-    | (.vNat x₁, .gt, .vNat x₂) => pure (.vBool (x₁ > x₂))
-    | (.vNat x₁, .ge, .vNat x₂) => pure (.vBool (x₁ >= x₂))
+    | (.vInt x₁, .plus, .vInt x₂) => pure (.vInt (x₁ + x₂))
+    | (.vInt x₁, .minus, .vInt x₂) => pure (.vInt (x₁ - x₂))
+    | (.vInt x₁, .times, .vInt x₂) => pure (.vInt (x₁ * x₂))
+    | (.vInt x₁, .div, .vInt x₂) => pure (.vInt (x₁ / x₂))
+    | (.vInt x₁, .eq, .vInt x₂) => pure (.vBool (x₁ == x₂))
+    | (.vInt x₁, .neq, .vInt x₂) => pure (.vBool (x₁ != x₂))
+    | (.vInt x₁, .lt, .vInt x₂) => pure (.vBool (x₁ < x₂))
+    | (.vInt x₁, .le, .vInt x₂) => pure (.vBool (x₁ <= x₂))
+    | (.vInt x₁, .gt, .vInt x₂) => pure (.vBool (x₁ > x₂))
+    | (.vInt x₁, .ge, .vInt x₂) => pure (.vBool (x₁ >= x₂))
     | _ => .none
 
 public partial def Expr.eval (ρ : Env) (e : Expr) : Option Value :=
   match e with | .e t _ => match t with
-    | .c n => pure (.vNat n)
+    | .c n => pure (.vInt n)
     | .x x => ρ.env.lookup x
     | .fn x t₀ => pure (.closure ⟨⟨x, t₀⟩, ρ⟩)
     | .app t₁ t₂ => do

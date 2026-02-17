@@ -29,6 +29,7 @@ syntax ">=" : while_op_r
 declare_syntax_cat while_arith_atom
 syntax ident : while_arith_atom
 syntax num : while_arith_atom
+syntax "-" num : while_arith_atom
 syntax while_arith_atom while_op_a while_arith_atom : while_arith_atom
 syntax "(" while_arith_atom ")" : while_arith_atom
 
@@ -70,7 +71,8 @@ meta def elabOpr : Syntax → MetaM Expr
 
 meta partial def elabArithAtom : Syntax → MetaM Expr
   | `(while_arith_atom| $x:ident) => mkAppM ``ArithAtom.var #[mkStrLit x.getId.toString]
-  | `(while_arith_atom| $n:num) => mkAppM ``ArithAtom.const #[mkNatLit n.getNat]
+  | `(while_arith_atom| $n:num) => mkAppM ``ArithAtom.const #[mkIntLit n.getNat]
+  | `(while_arith_atom| -$n:num) => mkAppM ``ArithAtom.const #[mkIntLit (n.getNat * -1)]
   | `(while_arith_atom| $a:while_arith_atom $op:while_op_a $b:while_arith_atom) => do
     let aExpr ← elabArithAtom a
     let opExpr ← elabOpa op
