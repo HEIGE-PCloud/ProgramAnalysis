@@ -47,7 +47,7 @@ def Op_r.pp : Op_r → String
 
 public inductive ArithAtom
   | var : Var → ArithAtom
-  | const : Nat → ArithAtom
+  | const : Int → ArithAtom
   | op : Op_a → ArithAtom → ArithAtom → ArithAtom
 deriving Repr, Ord, DecidableEq
 

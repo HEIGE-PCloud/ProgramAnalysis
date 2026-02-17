@@ -22,6 +22,7 @@ syntax "!=" : fun_op
 
 declare_syntax_cat fun_term
 syntax num : fun_term
+syntax "-" num : fun_term
 syntax ident : fun_term
 syntax "fn" ident "=>" fun_term : fun_term
 syntax fun_term fun_term : fun_term
@@ -44,7 +45,8 @@ meta def elabOp : Syntax → MetaM Lean.Expr
   | _ => throwUnsupportedSyntax
 
 meta partial def elabTerm : Syntax → MetaM Lean.Expr
-  | `(fun_term| $n:num) => mkAppM ``Expr.mkConst #[mkNatLit n.getNat]
+  | `(fun_term| $n:num) => mkAppM ``Expr.mkConst #[mkIntLit n.getNat]
+  | `(fun_term| -$n:num) => mkAppM ``Expr.mkConst #[mkIntLit (n.getNat * -1)]
   | `(fun_term| $x:ident) => mkAppM ``Expr.mkVar #[mkStrLit x.getId.toString]
   | `(fun_term| fn $x:ident => $e:fun_term) => do
     let eExpr ← elabTerm e
