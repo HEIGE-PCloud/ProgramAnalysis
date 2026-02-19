@@ -13,9 +13,12 @@ public inductive ConcreteDomain
   | env : Var → ConcreteDomain
 deriving Repr, Ord, Inhabited
 
-public def ConcreteDomain.pp : ConcreteDomain → String
+public def ConcreteDomain.toString : ConcreteDomain → String
   | .cache n => s!"C({n})"
   | .env var => s!"r({var})"
+
+public instance : ToString ConcreteDomain where
+  toString := ConcreteDomain.toString
 
 /-- A term value that appears in constraints (always of the form `fn x => e`) -/
 public structure FnTerm where
@@ -23,8 +26,11 @@ public structure FnTerm where
   body : Expr
 deriving Repr, Ord
 
-public def FnTerm.pp (t : FnTerm) : String :=
-  s!"fn {t.var} => {t.body.pp}"
+public def FnTerm.toString (t : FnTerm) : String :=
+  s!"fn {t.var} => {t.body}"
+
+public instance : ToString FnTerm where
+  toString := FnTerm.toString
 
 /--
 Constraint is in the form of
@@ -44,10 +50,13 @@ public inductive Constraint
   | conditional (t : FnTerm) (rhs' : ConcreteDomain) (lhs rhs : ConcreteDomain) : Constraint
 deriving Repr, Ord
 
-public def Constraint.pp : Constraint → String
-  | .subset lhs rhs => s!"{lhs.pp} ⊆ {rhs.pp}"
-  | .literal t rhs => s!"{t.pp} ⊆ {rhs.pp}"
-  | .conditional t rhs' lhs rhs => s!"{t.pp} ⊆ {rhs'.pp} => {lhs.pp} ⊆ {rhs.pp}"
+public def Constraint.toString : Constraint → String
+  | .subset lhs rhs => s!"{lhs} ⊆ {rhs}"
+  | .literal t rhs => s!"{t} ⊆ {rhs}"
+  | .conditional t rhs' lhs rhs => s!"{t} ⊆ {rhs'} => {lhs} ⊆ {rhs}"
+
+public instance : ToString Constraint where
+  toString := Constraint.toString
 
 public def Fun.Expr.allFns : Expr → List FnTerm
 | .e term _ => match term with
@@ -150,5 +159,4 @@ public def Constraint.solve (constraints: List Constraint) : Map Node (Set FnTer
   -- Step 4: Recording the solution
   pure D
 
--- TODO: Control Flow + Data Flow
 end ProgramAnalysis.ControlFlowAnalysis

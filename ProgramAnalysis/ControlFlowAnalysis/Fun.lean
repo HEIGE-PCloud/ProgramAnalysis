@@ -33,7 +33,7 @@ public inductive Op
   | neq
 deriving Repr, Ord
 
-def Op.pp : Op → String
+public def Op.toString : Op → String
   | .plus => "+"
   | .minus => "-"
   | .times => "*"
@@ -44,6 +44,9 @@ def Op.pp : Op → String
   | .le => "<="
   | .ge => ">="
   | .neq => "!="
+
+public instance : ToString Op where
+  toString := Op.toString
 
 public section -- See: https://github.com/leanprover/lean4/issues/10067
 mutual
@@ -65,19 +68,25 @@ end
 
 public section -- See: https://github.com/leanprover/lean4/issues/10067
 mutual
-public def Term.pp : Term → String
+public def Term.toString : Term → String
   | .c n => s!"{n}"
   | .x v => s!"{v}"
-  | .fn x body => s!"(fn {x} => {body.pp})"
-  | .app e1 e2 => s!"({e1.pp} {e2.pp})"
-  | .ite cond thn els => s!"(if {cond.pp} then {thn.pp} else {els.pp})"
-  | .op o e1 e2 => s!"({e1.pp} {o.pp} {e2.pp})"
-  | .letin x e1 e2 => s!"(let {x} = {e1.pp} in {e2.pp})"
+  | .fn x body => s!"(fn {x} => {body.toString})"
+  | .app e1 e2 => s!"({e1.toString} {e2.toString})"
+  | .ite cond thn els => s!"(if {cond.toString} then {thn.toString} else {els.toString})"
+  | .op o e1 e2 => s!"({e1.toString} {o.toString} {e2.toString})"
+  | .letin x e1 e2 => s!"(let {x} = {e1.toString} in {e2.toString})"
 
-public def Expr.pp : Expr → String
-  | .e t l => s!"{t.pp}{l.toSuperscript}"
+public def Expr.toString : Expr → String
+  | .e t l => s!"{t.toString}{l.toSuperscript}"
 end
 end
+
+public instance : ToString Term where
+  toString := Term.toString
+
+public instance : ToString Expr where
+  toString := Expr.toString
 
 example : Expr := Expr.e (
   Term.app
@@ -93,7 +102,7 @@ def freshLabel : StateM Label Label := do
   set (n + 1)
   return n
 
-public def Expr.mkConst (n : Label) : StateM Label Expr := do
+public def Expr.mkConst (n : Int) : StateM Label Expr := do
   let l ← freshLabel
   return Expr.e (Term.c n) l
 
@@ -159,13 +168,19 @@ deriving Repr
 end
 end
 
-public def Closure.pp : Closure → String
-  | ⟨(x, e), _⟩ => s!"[(fn {x} => {e.pp})]"
+public def Closure.toString : Closure → String
+  | ⟨(x, e), _⟩ => s!"[(fn {x} => {e})]"
 
-public def Value.pp : Value → String
+public instance : ToString Closure where
+  toString := Closure.toString
+
+public def Value.toString : Value → String
   | .vInt n => s!"{n}"
   | .vBool b => s!"{b}"
-  | .closure c => s!"{c.pp}"
+  | .closure c => s!"{c}"
+
+public instance : ToString Value where
+  toString := Value.toString
 
 def Value.getBool : Value → Option Bool
   | .vBool b => .some b

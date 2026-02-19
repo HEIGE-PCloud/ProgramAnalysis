@@ -26,16 +26,16 @@ def expr3 : Expr := [Fun|
 
 def expr := expr3
 
-#eval expr.pp
+#eval expr.toString
 
-#eval Value.pp <$> (expr.eval ⟨[]⟩)
+#eval Value.toString <$> (expr.eval ⟨[]⟩)
 
 def example.constraint := expr.constraints.run expr.allFns
 
-#eval example.constraint.toList.map (fun c => c.pp)
+#eval example.constraint.toList.map (fun c => c.toString)
 
 def example.solution := Constraint.solve example.constraint.toList
 
-#eval example.solution.toList.map (fun (node, value) => s!"{node.pp} ↦ {value.toList.map (fun t: FnTerm => t.pp)}")
+#eval example.solution.toList.map (fun (node, value) => s!"{node} ↦ {value.toList.map (fun t: FnTerm => t)}")
 
 end ProgramAnalysis.ControlFlowAnalysis.Example
