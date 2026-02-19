@@ -13,20 +13,26 @@ public inductive Op_a
   | div
 deriving Repr, Ord, DecidableEq
 
-def Op_a.pp : Op_a → String
+public def Op_a.toString : Op_a → String
   | .plus => "+"
   | .minus => "-"
   | .times => "*"
   | .div => "/"
+
+public instance : ToString Op_a where
+  toString := Op_a.toString
 
 public inductive Op_b
   | and
   | or
 deriving Repr, Ord, DecidableEq
 
-def Op_b.pp : Op_b → String
+public def Op_b.toString : Op_b → String
   | .and => "∧"
   | .or => "∨"
+
+public instance : ToString Op_b where
+  toString := Op_b.toString
 
 public inductive Op_r
   | eq
@@ -37,7 +43,7 @@ public inductive Op_r
   | neq
 deriving Repr, Ord, DecidableEq
 
-def Op_r.pp : Op_r → String
+public def Op_r.toString : Op_r → String
   | .eq => "="
   | .lt => "<"
   | .gt => ">"
@@ -45,16 +51,22 @@ def Op_r.pp : Op_r → String
   | .ge => "≥"
   | .neq => "≠"
 
+public instance : ToString Op_r where
+  toString := Op_r.toString
+
 public inductive ArithAtom
   | var : Var → ArithAtom
   | const : Nat → ArithAtom
   | op : Op_a → ArithAtom → ArithAtom → ArithAtom
 deriving Repr, Ord, DecidableEq
 
-def ArithAtom.pp : ArithAtom → String
+public def ArithAtom.toString : ArithAtom → String
   | .var x => x
-  | .const n => toString n
-  | .op o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
+  | .const n => ToString.toString n
+  | .op o a1 a2 => s!"({a1.toString} {o.toString} {a2.toString})"
+
+public instance : ToString ArithAtom where
+  toString := ArithAtom.toString
 
 public inductive BoolAtom
   | btrue : BoolAtom
@@ -64,12 +76,15 @@ public inductive BoolAtom
   | rel : Op_r → ArithAtom → ArithAtom → BoolAtom
 deriving Repr, Ord, DecidableEq
 
-def BoolAtom.pp : BoolAtom → String
+public def BoolAtom.toString : BoolAtom → String
   | .btrue => "true"
   | .bfalse => "false"
-  | .not b => s!"(¬{b.pp})"
-  | .op o b1 b2 => s!"({b1.pp} {o.pp} {b2.pp})"
-  | .rel o a1 a2 => s!"({a1.pp} {o.pp} {a2.pp})"
+  | .not b => s!"(¬{b.toString})"
+  | .op o b1 b2 => s!"({b1.toString} {o.toString} {b2.toString})"
+  | .rel o a1 a2 => s!"({a1.toString} {o.toString} {a2.toString})"
+
+public instance : ToString BoolAtom where
+  toString := BoolAtom.toString
 
 public inductive Stmt
   | stop : Label → Stmt
