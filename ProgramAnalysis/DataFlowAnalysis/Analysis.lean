@@ -33,17 +33,23 @@ public inductive EquationType
   | exit
 deriving BEq, Repr, Ord
 
-def EquationType.pp (e : EquationType) : String :=
+public def EquationType.toString (e : EquationType) : String :=
   match e with
     | entry => "entry"
     | exit => "exit"
+
+public instance : ToString EquationType where
+  toString := EquationType.toString
 
 public structure EquationAtom where
   label : Label
   ty : EquationType
 deriving BEq, Repr, Ord
 
-public def EquationAtom.pp (e : EquationAtom) : String := s!"AE{e.ty.pp}({e.label})"
+public def EquationAtom.toString (e : EquationAtom) : String := s!"AE{e.ty.toString}({e.label})"
+
+public instance : ToString EquationAtom where
+  toString := EquationAtom.toString
 
 public inductive SetExpr where
   | empty : SetExpr
@@ -54,15 +60,18 @@ public inductive SetExpr where
   | diff : SetExpr → SetExpr → SetExpr
 deriving Repr
 
-public def SetExpr.pp : SetExpr → String
+public def SetExpr.toString : SetExpr → String
   | .empty => "∅"
-  | .var atom => atom.pp
+  | .var atom => atom.toString
   | .lit s =>
-    let elems := String.intercalate ", " (s.toList.map (fun a => a.pp))
+    let elems := String.intercalate ", " (s.toList.map (fun a => a.toString))
     "{" ++ elems ++ "}"
-  | .union a b => s!"({a.pp} ∪ {b.pp})"
-  | .inter a b => s!"({a.pp} ∩ {b.pp})"
-  | .diff a b => s!"({a.pp} \\ {b.pp})"
+  | .union a b => s!"({a.toString} ∪ {b.toString})"
+  | .inter a b => s!"({a.toString} ∩ {b.toString})"
+  | .diff a b => s!"({a.toString} \\ {b.toString})"
+
+public instance : ToString SetExpr where
+  toString := SetExpr.toString
 
 public def inters : List SetExpr → SetExpr
   | [] => .empty
@@ -74,8 +83,11 @@ public structure Equation where
   rhs : SetExpr
 deriving Repr
 
-public def Equation.pp : Equation → String
-  | ⟨lhs, rhs⟩ => s!"{lhs.pp} = {rhs.pp}"
+public def Equation.toString : Equation → String
+  | ⟨lhs, rhs⟩ => s!"{lhs.toString} = {rhs.toString}"
+
+public instance : ToString Equation where
+  toString := Equation.toString
 
 public def Equation.build (s : Stmt) (l : Label) (ty : EquationType) : Equation :=
   let lhs := EquationAtom.mk l ty
