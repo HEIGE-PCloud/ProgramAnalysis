@@ -3,3 +3,4 @@ module
 public import ProgramAnalysis.ControlFlowAnalysis.Basic
 public import ProgramAnalysis.ControlFlowAnalysis.Fun
 public import ProgramAnalysis.ControlFlowAnalysis.Analysis
+public meta import ProgramAnalysis.ControlFlowAnalysis.Meta
