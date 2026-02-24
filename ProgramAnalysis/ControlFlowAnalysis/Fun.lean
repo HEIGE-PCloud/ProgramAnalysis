@@ -168,6 +168,8 @@ deriving Repr
 end
 end
 
+public def Env.empty : Env := ⟨[]⟩
+
 public def Closure.toString : Closure → String
   | ⟨(x, e), _⟩ => s!"[(fn {x} => {e})]"
 

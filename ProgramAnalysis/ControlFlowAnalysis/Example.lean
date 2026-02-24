@@ -24,11 +24,16 @@ def expr3 : Expr := [Fun|
   in ((f 3) 0))
 ]
 
-def expr := expr3
+def expr4 : Expr := [Fun|
+  (let g = (fn f => (if (f 3) then 10 else 5))
+   in (g (fn y => (y > 2))))
+]
+
+def expr := expr4
 
 #eval expr.toString
 
-#eval Value.toString <$> (expr.eval ⟨[]⟩)
+#eval Value.toString <$> (expr.eval .empty)
 
 def example.constraint := expr.constraints.run expr.allFns
 
