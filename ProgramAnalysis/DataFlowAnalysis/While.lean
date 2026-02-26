@@ -247,6 +247,7 @@ deriving Repr, BEq, Ord
 public def AExp.toString : AExp → String
   | ⟨o, a1, a2⟩ => s!"({a1} {o} {a2})"
 
+public instance : ToString AExp := ⟨AExp.toString⟩
 
 @[grind]
 public def AExp.FV : AExp → List Var
