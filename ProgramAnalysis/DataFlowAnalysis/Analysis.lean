@@ -78,6 +78,7 @@ public def analysis : Analysis :=
   , gen := gen
   }
 
+-- TODO: migrate the rest of analysis to use the new interface
 end AvailableExpression
 
 namespace ReachingDefinition
