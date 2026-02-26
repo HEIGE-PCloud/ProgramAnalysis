@@ -52,4 +52,26 @@ def solution := chaoticIteration equations ReachingDefinition.init
 
 end RD
 
+namespace VB
+
+def exampleVB : Stmt := [While|
+  if a > b then
+    x := b - a;
+    y := a - b
+  else
+    y := b - a;
+    x := a - b
+  ]
+
+def equations := VeryBusyExpression.equations exampleVB
+
+#eval equations.forM (fun eq => IO.println eq.toString)
+
+def solution := chaoticIteration equations (VeryBusyExpression.init exampleVB)
+
+#eval solution.toList.forM
+  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
+
+end VB
+
 end ProgramAnalysis.DataFlowAnalysis.Example

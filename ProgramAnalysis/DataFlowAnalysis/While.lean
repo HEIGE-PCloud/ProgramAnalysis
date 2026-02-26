@@ -263,6 +263,14 @@ public def ArithAtom.aexp : ArithAtom → List AExp
   | .op o x y => [⟨o, x, y⟩] ++ x.aexp ++ y.aexp
 
 @[grind]
+public def BoolAtom.aexp : BoolAtom → List AExp
+  | .bfalse => []
+  | .btrue => []
+  | .not b => b.aexp
+  | .op _ b1 b2 => b1.aexp ++ b2.aexp
+  | .rel _ a1 a2 => a1.aexp ++ a2.aexp
+
+@[grind]
 public def Stmt.aexp : Stmt → List AExp
   | .assign _ a _ => a.aexp
   | swhile _ _ s => s.aexp

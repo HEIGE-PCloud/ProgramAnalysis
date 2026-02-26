@@ -13,7 +13,7 @@ open While
 namespace AvailableExpression
 
 @[expose] public def Value := AExp
-  deriving Ord
+  deriving Ord, ToString
 
 def kill (stmt : Stmt) : Block → List Value
   | .assign x _ _ => stmt.aexp.filter (fun a' => a'.FV.elem x)
@@ -102,9 +102,44 @@ end ReachingDefinition
 
 namespace VeryBusyExpression
 
+@[expose] public def Value := AExp
+  deriving Ord, ToString
+
+def kill (stmt : Stmt) : Block → List Value
+  | .assign x _ _ => stmt.aexp.filter (fun a' => a'.FV.elem x)
+  | _ => ∅
+
+def gen : Block → List Value
+  | .assign _ a _ => a.aexp
+  | .test b _ => b.aexp
+  | _ => ∅
+
+def exit (s : Stmt) (l : Label) : Equation Value :=
+  let lhs := Equation.Atom.mk l .e1
+  if s.final.elem l then ⟨lhs, .empty⟩
+  else ⟨lhs, inters (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (Equation.Atom.mk l' .e0)) else none))⟩
+
+def entry (s : Stmt) (l : Label) : Equation Value :=
+  let lhs := Equation.Atom.mk l .e0
+  let b := s.block! l
+  ⟨lhs, .union (.diff (.var ⟨l, .e1⟩) (.lit (.ofList (kill s b)))) (.lit (.ofList (gen b)))⟩
+
+public def equations (s : Stmt) : List (Equation Value) :=
+  s.labels.flatMap (fun l => [entry s l, exit s l])
+
+public def init (s : Stmt) (es : List (Equation Value))
+  : Std.TreeMap Equation.Atom (Std.TreeSet Value) :=
+  let aexp : List Value := s.aexp
+  let univ : Std.TreeSet Value := .ofList aexp
+  es.foldl (fun acc eq => acc.insert eq.lhs univ) .empty
+
 end VeryBusyExpression
 
 namespace LiveVariable
+
+@[expose] public def Value := Var
+  deriving Ord
+
 
 end LiveVariable
 
