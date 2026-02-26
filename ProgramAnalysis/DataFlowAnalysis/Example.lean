@@ -17,10 +17,11 @@ def exampleAE : Stmt := [While|
   )
 ]
 
-def equations := AvailableExpression.equations exampleAE
+def equations := AvailableExpression.analysis.equations exampleAE
+
 
 /--
-info: Analysis◦(1) = ∅
+info: Analysis◦(1) = {}
 Analysis•(1) = ((Analysis◦(1) \ {}) ∪ {(a + b)})
 Analysis◦(2) = Analysis•(1)
 Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {(a * b)})
@@ -34,7 +35,7 @@ Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a + b)})
 #guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
-def solution := chaoticIteration equations (AvailableExpression.init exampleAE)
+def solution := chaoticIteration equations (AvailableExpression.analysis.init exampleAE)
 
 /--
 info: Analysis◦(1) = []
@@ -50,7 +51,7 @@ Analysis•(5) = [(a + b)]
 -/
 #guard_msgs in
 #eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
+  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AvailableExpression.analysis.value => a)}")
 
 end AE
 

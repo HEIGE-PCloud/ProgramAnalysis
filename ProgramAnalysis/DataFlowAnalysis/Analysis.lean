@@ -10,38 +10,45 @@ namespace ProgramAnalysis.DataFlowAnalysis
 
 open While
 
-structure Analysis where
+public structure Analysis where
   value : Type
   ordValue : Ord value
+  toStringValue : ToString value
   name : String
   join : Equation.Expr value → Equation.Expr value → Equation.Expr value
-  bottom : List value
-  extremeValue : List value
-  extremeLabel : List Label
+  bottom : Stmt → List value
+  extremeValue : Stmt → List value
+  extremeLabel : Stmt → List Label
   flow : Stmt → List (Label × Label)
   kill : Stmt → Block → List value
   gen : Stmt → Block → List value
 
-instance (a : Analysis) : Ord a.value := a.ordValue
+public instance (a : Analysis) : Ord a.value := a.ordValue
+
+public instance (a : Analysis) : ToString a.value := a.toStringValue
 
 def Analysis.e0 (a : Analysis) (s : Stmt) (l : Label) : Equation a.value :=
   let lhs := Equation.Atom.mk l .e0
-  let ita := if a.extremeLabel.elem l then Equation.Expr.lit (.ofList a.extremeValue) else Equation.Expr.lit (.ofList a.bottom)
-  let as := (a.flow s).filterMap (fun (l', ll) => if l == ll then some (Equation.Expr.var (.mk l' .e1)) else none)
-  ⟨lhs, (foldExpr a.join (as ++ [ita]))⟩
+  let extremeLabel := a.extremeLabel s
+  let extremeValue := a.extremeValue s
+  let flow := a.flow s
+  let as := flow.filterMap (fun (l', ll) => if l == ll then some (Equation.Expr.var (.mk l' .e1)) else none)
+  if extremeLabel.elem l then ⟨lhs, .lit (.ofList extremeValue)⟩
+  else ⟨lhs, (foldExpr a.join as)⟩
 
 def Analysis.e1 (a : Analysis) (s : Stmt) (l : Label) : Equation a.value :=
   let lhs := Equation.Atom.mk l .e1
   let b := s.block! l
-  ⟨lhs, (a.join (.diff (.var ⟨l, .e0⟩) (.lit (.ofList (a.kill s b)))) (.lit (.ofList (a.gen s b))))⟩
+  ⟨lhs, (.union (.diff (.var ⟨l, .e0⟩) (.lit (.ofList (a.kill s b)))) (.lit (.ofList (a.gen s b))))⟩
 
-def Analysis.equations (a : Analysis) (s : Stmt) : List (Equation a.value) :=
+public def Analysis.equations (a : Analysis) (s : Stmt) : List (Equation a.value) :=
   s.labels.flatMap (fun l => [a.e0 s l, a.e1 s l])
 
-def Analysis.init (a : Analysis) (es : List (Equation a.value))
+public def Analysis.init (a : Analysis) (s : Stmt) (es : List (Equation a.value))
   : Std.TreeMap Equation.Atom (Std.TreeSet a.value) :=
+  let bottom := a.bottom s
   es.foldl (fun acc eq =>
-    acc.insert eq.lhs (.ofList a.bottom)
+    acc.insert eq.lhs (.ofList bottom)
   ) .empty
 
 namespace AvailableExpression
@@ -53,28 +60,23 @@ def kill (stmt : Stmt) : Block → List Value
   | .assign x _ _ => stmt.aexp.filter (fun a' => a'.FV.elem x)
   | _ => ∅
 
-def gen : Block → List Value
+def gen (_ : Stmt) : Block → List Value
   | .assign x a _ => a.aexp.filter (fun a' => !(a'.FV.elem x))
   | _ => ∅
 
-def entry (s : Stmt) (l : Label) : Equation Value :=
-  let lhs := Equation.Atom.mk l .e0
-  if l = s.init then ⟨lhs, .empty⟩
-  else ⟨lhs, foldExpr .inter (s.flow.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e1)) else none))⟩
-
-def exit (s : Stmt) (l : Label) : Equation Value :=
-  let lhs := Equation.Atom.mk l .e1
-  let b := s.block! l
-  ⟨lhs, .union (.diff (.var ⟨l, .e0⟩) (.lit (.ofList (kill s b)))) (.lit (.ofList (gen b)))⟩
-
-public def equations (s : Stmt) : List (Equation Value) :=
-  s.labels.flatMap (fun l => [entry s l, exit s l])
-
-public def init (s : Stmt) (es : List (Equation Value))
-  : Std.TreeMap Equation.Atom (Std.TreeSet Value) :=
-  let aexp : List Value := s.aexp
-  let univ : Std.TreeSet Value := .ofList aexp
-  es.foldl (fun acc eq => acc.insert eq.lhs univ) .empty
+public def analysis : Analysis :=
+  { value := Value
+  , ordValue := inferInstance
+  , toStringValue := inferInstance
+  , name := "Available Expression"
+  , join := .inter
+  , bottom := fun s => s.aexp
+  , extremeValue := fun _ => []
+  , extremeLabel := fun s => [s.init]
+  , flow := fun s => s.flow
+  , kill := kill
+  , gen := gen
+  }
 
 end AvailableExpression
 
