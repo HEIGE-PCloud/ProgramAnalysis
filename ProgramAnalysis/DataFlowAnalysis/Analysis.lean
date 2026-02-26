@@ -10,6 +10,40 @@ namespace ProgramAnalysis.DataFlowAnalysis
 
 open While
 
+structure Analysis where
+  value : Type
+  ordValue : Ord value
+  name : String
+  join : Equation.Expr value → Equation.Expr value → Equation.Expr value
+  bottom : List value
+  extremeValue : List value
+  extremeLabel : List Label
+  flow : Stmt → List (Label × Label)
+  kill : Stmt → Block → List value
+  gen : Stmt → Block → List value
+
+instance (a : Analysis) : Ord a.value := a.ordValue
+
+def Analysis.e0 (a : Analysis) (s : Stmt) (l : Label) : Equation a.value :=
+  let lhs := Equation.Atom.mk l .e0
+  let ita := if a.extremeLabel.elem l then Equation.Expr.lit (.ofList a.extremeValue) else Equation.Expr.lit (.ofList a.bottom)
+  let as := (a.flow s).filterMap (fun (l', ll) => if l == ll then some (Equation.Expr.var (.mk l' .e1)) else none)
+  ⟨lhs, (foldExpr a.join (as ++ [ita]))⟩
+
+def Analysis.e1 (a : Analysis) (s : Stmt) (l : Label) : Equation a.value :=
+  let lhs := Equation.Atom.mk l .e1
+  let b := s.block! l
+  ⟨lhs, (a.join (.diff (.var ⟨l, .e0⟩) (.lit (.ofList (a.kill s b)))) (.lit (.ofList (a.gen s b))))⟩
+
+def Analysis.equations (a : Analysis) (s : Stmt) : List (Equation a.value) :=
+  s.labels.flatMap (fun l => [a.e0 s l, a.e1 s l])
+
+def Analysis.init (a : Analysis) (es : List (Equation a.value))
+  : Std.TreeMap Equation.Atom (Std.TreeSet a.value) :=
+  es.foldl (fun acc eq =>
+    acc.insert eq.lhs (.ofList a.bottom)
+  ) .empty
+
 namespace AvailableExpression
 
 @[expose] public def Value := AExp
@@ -26,7 +60,7 @@ def gen : Block → List Value
 def entry (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e0
   if l = s.init then ⟨lhs, .empty⟩
-  else ⟨lhs, inters (s.flow.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e1)) else none))⟩
+  else ⟨lhs, foldExpr .inter (s.flow.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e1)) else none))⟩
 
 def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
@@ -84,7 +118,7 @@ def entry (s : Stmt) (l : Label) : Equation Value :=
     := s.flow.filterMap (fun (l', l'') => if l'' == l then
       some (.var (.mk l' .e1)) else none)
   if l = s.init then ⟨lhs, .lit (.ofList rhs1)⟩
-  else ⟨lhs, unions rhs2⟩
+  else ⟨lhs, foldExpr .union rhs2⟩
 
 def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
@@ -117,7 +151,7 @@ def gen : Block → List Value
 def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
   if s.final.elem l then ⟨lhs, .empty⟩
-  else ⟨lhs, inters (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e0)) else none))⟩
+  else ⟨lhs, foldExpr .inter (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e0)) else none))⟩
 
 def entry (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e0
@@ -152,7 +186,7 @@ def gen : Block → List Value
 def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
   if s.final.elem l then ⟨lhs, .empty⟩
-  else ⟨lhs, unions (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e0)) else none))⟩
+  else ⟨lhs, foldExpr .union (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e0)) else none))⟩
 
 def entry (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e0

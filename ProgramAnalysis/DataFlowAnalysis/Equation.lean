@@ -49,15 +49,10 @@ public def Equation.Expr.toString [Ord α] [ToString α]
 public instance [Ord α] [ToString α] : ToString (Equation.Expr α)
   := ⟨Equation.Expr.toString⟩
 
-public def inters [Ord α] : List (Equation.Expr α) → Equation.Expr α
+public def foldExpr [Ord α] (op : Equation.Expr α → Equation.Expr α → Equation.Expr α) : List (Equation.Expr α) → Equation.Expr α
   | [] => .empty
   | x :: [] => x
-  | x :: xs => .inter x (inters xs)
-
-public def unions [Ord α] : List (Equation.Expr α) → Equation.Expr α
-  | [] => .empty
-  | x :: [] => x
-  | x :: xs => .union x (unions xs)
+  | x :: xs => op x (foldExpr op xs)
 
 public structure Equation (α : Type) [Ord α] where
   lhs : Equation.Atom
