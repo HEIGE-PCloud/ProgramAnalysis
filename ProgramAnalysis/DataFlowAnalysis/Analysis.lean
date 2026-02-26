@@ -11,22 +11,13 @@ namespace ProgramAnalysis.DataFlowAnalysis
 namespace AvailableExpression
 open While
 
-def AE.kill' : Block → ReaderM Stmt (List AExp)
-  | .assign x _ _ => do
-    let stmt ← read
-    let aexps := stmt.aexp
-    pure (aexps.filter (fun a' => a'.FV.elem x))
-  | .skip _ => pure ∅
-  | .test _ _ => pure ∅
+def AE.kill (stmt : Stmt) : Block → List AExp
+  | .assign x _ _ => stmt.aexp.filter (fun a' => a'.FV.elem x)
+  | _ => ∅
 
-def AE.kill (s : Stmt) (b : Block) : List AExp := (kill' b).run s
-
-def AE.gen' : Block → ReaderM Stmt (List AExp)
-  | .assign x a _ => pure (a.aexp.filter (fun a' => !(a'.FV.elem x)))
-  | .skip _ => pure []
-  | .test _ _ => pure []
-
-def AE.gen (s : Stmt) (b : Block) : List AExp := (gen' b).run s
+def AE.gen (_ : Stmt) : Block → List AExp
+  | .assign x a _ => a.aexp.filter (fun a' => !(a'.FV.elem x))
+  | _ => ∅
 
 def AE.entry (s : Stmt) (l : Label) : Equation AExp :=
   let lhs := Equation.Atom.mk l .e0
