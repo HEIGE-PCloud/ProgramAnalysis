@@ -78,7 +78,6 @@ public def analysis : Analysis :=
   , gen := gen
   }
 
--- TODO: migrate the rest of analysis to use the new interface
 end AvailableExpression
 
 namespace ReachingDefinition
@@ -109,31 +108,23 @@ def kill (stmt : Stmt) : Block → List Value
       | .assign x' _ _ => if x == x' then some (x, some block.label) else none
       | _ => none
 
-def gen : Block → List Value
+def gen (_ : Stmt) : Block → List Value
   | .assign x _ l => [(x, some l)]
   | _ => ∅
 
-
-def entry (s : Stmt) (l : Label) : Equation Value :=
-  let lhs := Equation.Atom.mk l .e0
-  let rhs1 : List Value := s.FV.map (fun x => (x, none))
-  let rhs2 : List (Equation.Expr Value)
-    := s.flow.filterMap (fun (l', l'') => if l'' == l then
-      some (.var (.mk l' .e1)) else none)
-  if l = s.init then ⟨lhs, .lit (.ofList rhs1)⟩
-  else ⟨lhs, foldExpr .union rhs2⟩
-
-def exit (s : Stmt) (l : Label) : Equation Value :=
-  let lhs := Equation.Atom.mk l .e1
-  let b := s.block! l
-  ⟨lhs, .union (.diff (.var ⟨l, .e0⟩) (.lit (.ofList (kill s b)))) (.lit (.ofList (gen b)))⟩
-
-public def equations (s : Stmt) : List (Equation Value) :=
-  s.labels.flatMap (fun l => [entry s l, exit s l])
-
-public def init {α} [Ord α] (es : List (Equation α))
-  : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
-  es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
+public def analysis : Analysis :=
+  { value := Value
+  , ordValue := inferInstance
+  , toStringValue := inferInstance
+  , name := "Reaching Definition"
+  , join := .union
+  , bottom := fun _ => []
+  , extremeValue := fun s => s.FV.map (fun x => (x, none))
+  , extremeLabel := fun s => [s.init]
+  , flow := fun s => s.flow
+  , kill := kill
+  , gen := gen
+  }
 
 end ReachingDefinition
 

@@ -66,7 +66,7 @@ def exampleRD : Stmt := [While|
   )
 ]
 
-def equations := ReachingDefinition.equations exampleRD
+def equations := ReachingDefinition.analysis.equations exampleRD
 
 /--
 info: Analysis◦(1) = {(x, ?), (y, ?)}
@@ -83,7 +83,7 @@ Analysis•(5) = ((Analysis◦(5) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 5)})
 #guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
-def solution := chaoticIteration equations ReachingDefinition.init
+def solution := chaoticIteration equations (ReachingDefinition.analysis.init exampleRD)
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
