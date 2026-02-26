@@ -20,7 +20,7 @@ def example1 : Stmt := [While|
 def equations := AE.equations example1
 #eval equations.map (fun eq => eq.toString)
 
-def solution := chaoticIteration equations
+def solution := chaoticIteration equations AE.init
 #eval solution.toList.map
   (fun (k, v) => s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
 

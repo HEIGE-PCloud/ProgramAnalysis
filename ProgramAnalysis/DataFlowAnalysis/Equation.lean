@@ -65,10 +65,6 @@ public def Equation.toString [Ord α] [ToString α] : Equation α → String
 public instance [Ord α] [ToString α] : ToString (Equation α)
   := ⟨Equation.toString⟩
 
-def chaoticIterationInit [Ord α] (es : List (Equation α))
-  : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
-  es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
-
 def Equation.Expr.eval [Ord α]
   (env : Std.TreeMap Equation.Atom (Std.TreeSet α))
   : Equation.Expr α → Std.TreeSet α
@@ -86,14 +82,17 @@ def chaoticIterationOnce [Ord α]
   es.foldl (fun acc eq => acc.insert eq.lhs (eq.rhs.eval env)) env
 
 -- TODO: Prove termination?
-partial def chaoticIteration' [Ord α]
+public partial def chaoticIteration' [Ord α]
   (es : List (Equation α))
   (env : Std.TreeMap Equation.Atom (Std.TreeSet α)) :=
   let env' := chaoticIterationOnce env es
   if env' == env then env
   else chaoticIteration' es env'
 
-public def chaoticIteration [Ord α] (es : List (Equation α)) :=
-  chaoticIteration' es (chaoticIterationInit es)
+public def chaoticIteration [Ord α]
+  (es : List (Equation α))
+  (init : List (Equation α) → Std.TreeMap Equation.Atom (Std.TreeSet α))
+  : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
+  chaoticIteration' es (init es)
 
 end ProgramAnalysis.DataFlowAnalysis

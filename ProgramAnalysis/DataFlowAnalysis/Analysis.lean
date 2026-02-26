@@ -32,6 +32,10 @@ def AE.exit (s : Stmt) (l : Label) : Equation AExp :=
 public def AE.equations (s : Stmt) : List (Equation AExp) :=
   s.labels.flatMap (fun l => [AE.entry s l, AE.exit s l])
 
+public def AE.init [Ord α] (es : List (Equation α))
+  : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
+  es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
+
 end AvailableExpression
 
 end ProgramAnalysis.DataFlowAnalysis
