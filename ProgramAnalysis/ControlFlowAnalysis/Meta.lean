@@ -77,6 +77,10 @@ elab "[Fun|" p:fun_term "]" : term => do
   let pExpr ← mkAppM ``Expr.build #[pExpr]
   return pExpr
 
+/--
+info: Expr.build (Expr.mkApp (Expr.mkFn "x" (Expr.mkVar "x")) (Expr.mkFn "y" (Expr.mkVar "y")))
+-/
+#guard_msgs in
 #reduce [Fun|(fn x => x)(fn y => y)]
 
 end ProgramAnalysis.ControlFlowAnalysis.Fun.Meta

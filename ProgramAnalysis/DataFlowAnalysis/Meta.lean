@@ -130,6 +130,17 @@ meta def elabWhile (stx : Syntax) : MetaM Expr := do
 
 elab "[While|" p:while_stmt "]" : term => elabWhile p
 
+/--
+info: Stmt.build
+  (Stmt.mkSeq (Stmt.mkAssign "y" (ArithAtom.var "x"))
+    (Stmt.mkSeq (Stmt.mkAssign "z" (ArithAtom.var "y"))
+      (Stmt.mkSeq
+        (Stmt.mkWhile (BoolAtom.rel Op_r.gt (ArithAtom.var "y") (ArithAtom.const (Int.ofNat 1)))
+          (Stmt.mkSeq (Stmt.mkAssign "z" (ArithAtom.op Op_a.times (ArithAtom.var "z") (ArithAtom.var "y")))
+            (Stmt.mkAssign "y" (ArithAtom.op Op_a.minus (ArithAtom.var "y") (ArithAtom.const (Int.ofNat 1))))))
+        (Stmt.mkAssign "y" (ArithAtom.const (Int.ofNat 0))))))
+-/
+#guard_msgs in
 #reduce [While|
   y := x;
   z := y;
