@@ -270,4 +270,12 @@ public def Stmt.aexp : Stmt → List AExp
   | seq s1 s2 => s1.aexp ++ s2.aexp
   | skip _ => []
 
+@[grind]
+public def Stmt.FV : Stmt → List Var
+  | .assign x a _ => x :: a.FV
+  | .skip _ => []
+  | .seq s1 s2 => s1.FV ++ s2.FV
+  | .sif b _ s1 s2 => b.FV ++ s1.FV ++ s2.FV
+  | .swhile b _ s => b.FV ++ s.FV
+
 end ProgramAnalysis.DataFlowAnalysis.While

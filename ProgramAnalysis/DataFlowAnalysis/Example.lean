@@ -6,9 +6,9 @@ namespace ProgramAnalysis.DataFlowAnalysis.Example
 
 open ProgramAnalysis.DataFlowAnalysis While
 
-section AE
+namespace AE
 
-def example1 : Stmt := [While|
+def exampleAE : Stmt := [While|
   x := a + b;
   y := a * b;
   while y > a + b do (
@@ -17,9 +17,9 @@ def example1 : Stmt := [While|
   )
 ]
 
-#eval example1
+#eval exampleAE
 
-def equations := AvailableExpression.equations example1
+def equations := AvailableExpression.equations exampleAE
 
 #eval equations.forM (fun eq => IO.println eq.toString)
 
@@ -30,5 +30,26 @@ def solution := chaoticIteration equations AvailableExpression.init
 
 end AE
 
+namespace RD
+
+def exampleRD : Stmt := [While|
+  x := 5;
+  y := 1;
+  while x > 1 do (
+    y := x * y;
+    x := x - 1
+  )
+]
+
+def equations := ReachingDefinition.equations exampleRD
+
+#eval equations.forM (fun eq => IO.println eq.toString)
+
+def solution := chaoticIteration equations ReachingDefinition.init
+
+#eval solution.toList.forM
+  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+
+end RD
 
 end ProgramAnalysis.DataFlowAnalysis.Example

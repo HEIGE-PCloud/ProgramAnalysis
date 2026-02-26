@@ -54,6 +54,11 @@ public def inters [Ord α] : List (Equation.Expr α) → Equation.Expr α
   | x :: [] => x
   | x :: xs => .inter x (inters xs)
 
+public def unions [Ord α] : List (Equation.Expr α) → Equation.Expr α
+  | [] => .empty
+  | x :: [] => x
+  | x :: xs => .union x (unions xs)
+
 public structure Equation (α : Type) [Ord α] where
   lhs : Equation.Atom
   rhs : Equation.Expr α
