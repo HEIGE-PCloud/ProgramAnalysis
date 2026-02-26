@@ -47,6 +47,7 @@ syntax "skip" : while_stmt
 syntax while_stmt ";" while_stmt : while_stmt
 syntax "if" while_bool_atom "then" while_stmt "else" while_stmt : while_stmt
 syntax "while" while_bool_atom "do" "(" while_stmt ")" : while_stmt
+syntax "(" while_stmt ")" : while_stmt
 
 meta def elabOpa : Syntax → MetaM Expr
   | `(while_op_a| +) => return .const ``Op_a.plus []
@@ -119,6 +120,7 @@ meta partial def elabStmt : Syntax → MetaM Expr
     let bExpr ← elabBoolAtom b
     let sExpr ← elabStmt s
     mkAppM ``Stmt.mkWhile #[bExpr, sExpr]
+  | `(while_stmt| ($s:while_stmt)) => elabStmt s
   | _ => throwUnsupportedSyntax
 
 meta def elabWhile (stx : Syntax) : MetaM Expr := do

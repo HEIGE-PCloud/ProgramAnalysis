@@ -26,7 +26,7 @@ def gen : Block → List Value
 def entry (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e0
   if l = s.init then ⟨lhs, .empty⟩
-  else ⟨lhs, inters ((s.flow.filter (fun (_, ll) => l == ll)).map (fun (l', _l) => .var (Equation.Atom.mk l' .e1)))⟩
+  else ⟨lhs, inters (s.flow.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e1)) else none))⟩
 
 def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
@@ -117,7 +117,7 @@ def gen : Block → List Value
 def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
   if s.final.elem l then ⟨lhs, .empty⟩
-  else ⟨lhs, inters (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (Equation.Atom.mk l' .e0)) else none))⟩
+  else ⟨lhs, inters (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e0)) else none))⟩
 
 def entry (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e0
@@ -138,7 +138,33 @@ end VeryBusyExpression
 namespace LiveVariable
 
 @[expose] public def Value := Var
-  deriving Ord
+  deriving Ord, ToString
+
+def kill : Block → List Value
+  | .assign x _ _ => [x]
+  | _ => ∅
+
+def gen : Block → List Value
+  | .assign _ a _ => a.FV
+  | .test b _ => b.FV
+  | _ => ∅
+
+def exit (s : Stmt) (l : Label) : Equation Value :=
+  let lhs := Equation.Atom.mk l .e1
+  if s.final.elem l then ⟨lhs, .empty⟩
+  else ⟨lhs, unions (s.flowR.filterMap (fun (l', ll) => if l == ll then some (.var (.mk l' .e0)) else none))⟩
+
+def entry (s : Stmt) (l : Label) : Equation Value :=
+  let lhs := Equation.Atom.mk l .e0
+  let b := s.block! l
+  ⟨lhs, .union (.diff (.var ⟨l, .e1⟩) (.lit (.ofList (kill b)))) (.lit (.ofList (gen b)))⟩
+
+public def equations (s : Stmt) : List (Equation Value) :=
+  s.labels.flatMap (fun l => [entry s l, exit s l])
+
+public def init {α} [Ord α] (es : List (Equation α))
+  : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
+  es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
 
 
 end LiveVariable

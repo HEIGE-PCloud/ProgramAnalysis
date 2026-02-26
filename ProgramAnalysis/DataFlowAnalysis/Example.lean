@@ -17,14 +17,38 @@ def exampleAE : Stmt := [While|
   )
 ]
 
-#eval exampleAE
-
 def equations := AvailableExpression.equations exampleAE
 
+/--
+info: Analysis◦(1) = ∅
+Analysis•(1) = ((Analysis◦(1) \ {}) ∪ {(a + b)})
+Analysis◦(2) = Analysis•(1)
+Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {(a * b)})
+Analysis◦(3) = (Analysis•(5) ∩ Analysis•(2))
+Analysis•(3) = ((Analysis◦(3) \ {}) ∪ {})
+Analysis◦(4) = Analysis•(3)
+Analysis•(4) = ((Analysis◦(4) \ {(a + b), (a + 1), (a * b)}) ∪ {})
+Analysis◦(5) = Analysis•(4)
+Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a + b)})
+-/
+#guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
 def solution := chaoticIteration equations (AvailableExpression.init exampleAE)
 
+/--
+info: Analysis◦(1) = []
+Analysis•(1) = [(a + b)]
+Analysis◦(2) = [(a + b)]
+Analysis•(2) = [(a + b), (a * b)]
+Analysis◦(3) = [(a + b)]
+Analysis•(3) = [(a + b)]
+Analysis◦(4) = [(a + b)]
+Analysis•(4) = []
+Analysis◦(5) = []
+Analysis•(5) = [(a + b)]
+-/
+#guard_msgs in
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
 
@@ -43,10 +67,36 @@ def exampleRD : Stmt := [While|
 
 def equations := ReachingDefinition.equations exampleRD
 
+/--
+info: Analysis◦(1) = {(x, ?), (y, ?)}
+Analysis•(1) = ((Analysis◦(1) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 1)})
+Analysis◦(2) = Analysis•(1)
+Analysis•(2) = ((Analysis◦(2) \ {(y, ?), (y, 2), (y, 4)}) ∪ {(y, 2)})
+Analysis◦(3) = (Analysis•(5) ∪ Analysis•(2))
+Analysis•(3) = ((Analysis◦(3) \ {}) ∪ {})
+Analysis◦(4) = Analysis•(3)
+Analysis•(4) = ((Analysis◦(4) \ {(y, ?), (y, 2), (y, 4)}) ∪ {(y, 4)})
+Analysis◦(5) = Analysis•(4)
+Analysis•(5) = ((Analysis◦(5) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 5)})
+-/
+#guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
 def solution := chaoticIteration equations ReachingDefinition.init
 
+/--
+info: Analysis◦(1) = [(x, ?), (y, ?)]
+Analysis•(1) = [(x, 1), (y, ?)]
+Analysis◦(2) = [(x, 1), (y, ?)]
+Analysis•(2) = [(x, 1), (y, 2)]
+Analysis◦(3) = [(x, 1), (x, 5), (y, 2), (y, 4)]
+Analysis•(3) = [(x, 1), (x, 5), (y, 2), (y, 4)]
+Analysis◦(4) = [(x, 1), (x, 5), (y, 2), (y, 4)]
+Analysis•(4) = [(x, 1), (x, 5), (y, 4)]
+Analysis◦(5) = [(x, 1), (x, 5), (y, 4)]
+Analysis•(5) = [(x, 5), (y, 4)]
+-/
+#guard_msgs in
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList}")
 
@@ -65,13 +115,93 @@ def exampleVB : Stmt := [While|
 
 def equations := VeryBusyExpression.equations exampleVB
 
+/--
+info: Analysis◦(1) = ((Analysis•(1) \ {}) ∪ {})
+Analysis•(1) = (Analysis◦(2) ∩ Analysis◦(4))
+Analysis◦(2) = ((Analysis•(2) \ {}) ∪ {(b - a)})
+Analysis•(2) = Analysis◦(3)
+Analysis◦(3) = ((Analysis•(3) \ {}) ∪ {(a - b)})
+Analysis•(3) = ∅
+Analysis◦(4) = ((Analysis•(4) \ {}) ∪ {(b - a)})
+Analysis•(4) = Analysis◦(5)
+Analysis◦(5) = ((Analysis•(5) \ {}) ∪ {(a - b)})
+Analysis•(5) = ∅
+-/
+#guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
 def solution := chaoticIteration equations (VeryBusyExpression.init exampleVB)
 
+/--
+info: Analysis◦(1) = [(a - b), (b - a)]
+Analysis•(1) = [(a - b), (b - a)]
+Analysis◦(2) = [(a - b), (b - a)]
+Analysis•(2) = [(a - b)]
+Analysis◦(3) = [(a - b)]
+Analysis•(3) = []
+Analysis◦(4) = [(a - b), (b - a)]
+Analysis•(4) = [(a - b)]
+Analysis◦(5) = [(a - b)]
+Analysis•(5) = []
+-/
+#guard_msgs in
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
 
 end VB
+
+namespace LV
+
+def exampleLV : Stmt := [While|
+  x := 2;
+  y := 4;
+  x := 1;
+  (if y > x then z := y else z := y * y);
+  x := z
+]
+
+def equations := LiveVariable.equations exampleLV
+
+/--
+info: Analysis◦(1) = ((Analysis•(1) \ {x}) ∪ {})
+Analysis•(1) = Analysis◦(2)
+Analysis◦(2) = ((Analysis•(2) \ {y}) ∪ {})
+Analysis•(2) = Analysis◦(3)
+Analysis◦(3) = ((Analysis•(3) \ {x}) ∪ {})
+Analysis•(3) = Analysis◦(4)
+Analysis◦(4) = ((Analysis•(4) \ {}) ∪ {x, y})
+Analysis•(4) = (Analysis◦(5) ∪ Analysis◦(6))
+Analysis◦(5) = ((Analysis•(5) \ {z}) ∪ {y})
+Analysis•(5) = Analysis◦(7)
+Analysis◦(6) = ((Analysis•(6) \ {z}) ∪ {y})
+Analysis•(6) = Analysis◦(7)
+Analysis◦(7) = ((Analysis•(7) \ {x}) ∪ {z})
+Analysis•(7) = ∅
+-/
+#guard_msgs in
+#eval equations.forM (fun eq => IO.println eq.toString)
+
+def solution := chaoticIteration equations LiveVariable.init
+
+/--
+info: Analysis◦(1) = []
+Analysis•(1) = []
+Analysis◦(2) = []
+Analysis•(2) = [y]
+Analysis◦(3) = [y]
+Analysis•(3) = [x, y]
+Analysis◦(4) = [x, y]
+Analysis•(4) = [y]
+Analysis◦(5) = [y]
+Analysis•(5) = [z]
+Analysis◦(6) = [y]
+Analysis•(6) = [z]
+Analysis◦(7) = [z]
+Analysis•(7) = []
+-/
+#guard_msgs in
+#eval solution.toList.forM
+  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+end LV
 
 end ProgramAnalysis.DataFlowAnalysis.Example
