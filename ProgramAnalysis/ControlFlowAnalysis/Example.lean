@@ -31,16 +31,16 @@ def expr4 : Expr := [Fun|
 
 def expr := expr4
 
-#eval expr.toString
+#eval IO.println expr.toString
 
 #eval Value.toString <$> (expr.eval .empty)
 
 def example.constraint := expr.constraints.run expr.allFns
 
-#eval example.constraint.toList.map (fun c => c.toString)
+#eval example.constraint.toList.forM (fun c => IO.println c)
 
 def example.solution := Constraint.solve example.constraint.toList
 
-#eval example.solution.toList.map (fun (node, value) => s!"{node} ↦ {value.toList.map (fun t: FnTerm => t)}")
+#eval example.solution.toList.forM (fun (node, value) => IO.println s!"{node} ↦ {value.toList.map (fun t: FnTerm => t)}")
 
 end ProgramAnalysis.ControlFlowAnalysis.Example

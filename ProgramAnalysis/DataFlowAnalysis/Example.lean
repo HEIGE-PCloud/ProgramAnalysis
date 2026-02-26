@@ -18,10 +18,10 @@ def example1 : Stmt := [While|
 #eval example1
 
 def equations := AE.equations example1
-#eval equations.map (fun eq => eq.toString)
+#eval equations.forM (fun eq => IO.println eq.toString)
 
 def solution := chaoticIteration equations AE.init
-#eval solution.toList.map
-  (fun (k, v) => s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
+#eval solution.toList.forM 
+  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
 
 end ProgramAnalysis.DataFlowAnalysis.Example
