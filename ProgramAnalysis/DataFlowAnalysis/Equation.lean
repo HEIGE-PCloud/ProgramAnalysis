@@ -10,8 +10,8 @@ public inductive Equation.AtomType
 deriving BEq, Repr, Ord
 
 public def Equation.AtomType.toString : Equation.AtomType → String
-  | e0 => "∘"
-  | e1 => "·"
+  | e0 => "◦"
+  | e1 => "•"
 
 public instance : ToString Equation.AtomType := ⟨Equation.AtomType.toString⟩
 
@@ -61,7 +61,7 @@ public def Equation.toString : Equation → String
 
 public instance : ToString Equation := ⟨Equation.toString⟩
 
-public def chaoticIterationInit (es : List Equation)
+def chaoticIterationInit (es : List Equation)
   : Std.TreeMap Equation.Atom (Std.TreeSet While.AExp) :=
   es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
 

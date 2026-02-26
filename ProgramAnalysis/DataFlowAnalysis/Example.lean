@@ -17,13 +17,11 @@ def example1 : Stmt := [While|
 
 #eval example1
 
-def equations := Equation.buildAll example1
+def equations := AE.equations example1
 #eval equations.map (fun eq => eq.toString)
 
-def init := chaoticIter (chaoticInit equations) equations
-#eval init
-
-def solution := chaoticIters equations
-#eval solution.toList.map (fun (k, v) => s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
+def solution := chaoticIteration equations
+#eval solution.toList.map
+  (fun (k, v) => s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
 
 end ProgramAnalysis.DataFlowAnalysis.Example
