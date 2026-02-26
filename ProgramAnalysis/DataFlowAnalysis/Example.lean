@@ -161,44 +161,44 @@ def exampleLV : Stmt := [While|
   x := z
 ]
 
-def equations := LiveVariable.equations exampleLV
+def equations := LiveVariable.analysis.equations exampleLV
 
 /--
-info: Analysis◦(1) = ((Analysis•(1) \ {x}) ∪ {})
-Analysis•(1) = Analysis◦(2)
-Analysis◦(2) = ((Analysis•(2) \ {y}) ∪ {})
-Analysis•(2) = Analysis◦(3)
-Analysis◦(3) = ((Analysis•(3) \ {x}) ∪ {})
-Analysis•(3) = Analysis◦(4)
-Analysis◦(4) = ((Analysis•(4) \ {}) ∪ {x, y})
-Analysis•(4) = (Analysis◦(5) ∪ Analysis◦(6))
-Analysis◦(5) = ((Analysis•(5) \ {z}) ∪ {y})
-Analysis•(5) = Analysis◦(7)
-Analysis◦(6) = ((Analysis•(6) \ {z}) ∪ {y})
-Analysis•(6) = Analysis◦(7)
-Analysis◦(7) = ((Analysis•(7) \ {x}) ∪ {z})
-Analysis•(7) = ∅
+info: Analysis◦(1) = Analysis•(2)
+Analysis•(1) = ((Analysis◦(1) \ {x}) ∪ {})
+Analysis◦(2) = Analysis•(3)
+Analysis•(2) = ((Analysis◦(2) \ {y}) ∪ {})
+Analysis◦(3) = Analysis•(4)
+Analysis•(3) = ((Analysis◦(3) \ {x}) ∪ {})
+Analysis◦(4) = (Analysis•(5) ∪ Analysis•(6))
+Analysis•(4) = ((Analysis◦(4) \ {}) ∪ {x, y})
+Analysis◦(5) = Analysis•(7)
+Analysis•(5) = ((Analysis◦(5) \ {z}) ∪ {y})
+Analysis◦(6) = Analysis•(7)
+Analysis•(6) = ((Analysis◦(6) \ {z}) ∪ {y})
+Analysis◦(7) = {}
+Analysis•(7) = ((Analysis◦(7) \ {x}) ∪ {z})
 -/
 #guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
-def solution := chaoticIteration equations LiveVariable.init
+def solution := chaoticIteration equations (LiveVariable.analysis.init exampleLV)
 
 /--
 info: Analysis◦(1) = []
 Analysis•(1) = []
-Analysis◦(2) = []
-Analysis•(2) = [y]
-Analysis◦(3) = [y]
-Analysis•(3) = [x, y]
-Analysis◦(4) = [x, y]
-Analysis•(4) = [y]
-Analysis◦(5) = [y]
-Analysis•(5) = [z]
-Analysis◦(6) = [y]
-Analysis•(6) = [z]
-Analysis◦(7) = [z]
-Analysis•(7) = []
+Analysis◦(2) = [y]
+Analysis•(2) = []
+Analysis◦(3) = [x, y]
+Analysis•(3) = [y]
+Analysis◦(4) = [y]
+Analysis•(4) = [x, y]
+Analysis◦(5) = [z]
+Analysis•(5) = [y]
+Analysis◦(6) = [z]
+Analysis•(6) = [y]
+Analysis◦(7) = []
+Analysis•(7) = [z]
 -/
 #guard_msgs in
 #eval solution.toList.forM
