@@ -33,7 +33,7 @@ Analysis◦(5) = Analysis•(4)
 Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a + b)})
 -/
 #guard_msgs in
-#eval equations.forM (fun eq => IO.println eq.toString)
+#eval equations.forM IO.println
 
 def solution := chaoticIteration equations (AvailableExpression.analysis.init exampleAE)
 
@@ -81,7 +81,7 @@ Analysis◦(5) = Analysis•(4)
 Analysis•(5) = ((Analysis◦(5) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 5)})
 -/
 #guard_msgs in
-#eval equations.forM (fun eq => IO.println eq.toString)
+#eval equations.forM IO.println
 
 def solution := chaoticIteration equations (ReachingDefinition.analysis.init exampleRD)
 
@@ -129,7 +129,7 @@ Analysis◦(5) = {}
 Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a - b)})
 -/
 #guard_msgs in
-#eval equations.forM (fun eq => IO.println eq.toString)
+#eval equations.forM IO.println
 
 def solution := chaoticIteration equations (VeryBusyExpression.analysis.init exampleVB)
 
@@ -180,7 +180,7 @@ Analysis◦(7) = {}
 Analysis•(7) = ((Analysis◦(7) \ {x}) ∪ {z})
 -/
 #guard_msgs in
-#eval equations.forM (fun eq => IO.println eq.toString)
+#eval equations.forM IO.println
 
 def solution := chaoticIteration equations (LiveVariable.analysis.init exampleLV)
 
