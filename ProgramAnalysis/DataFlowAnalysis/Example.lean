@@ -114,40 +114,40 @@ def exampleVB : Stmt := [While|
     x := a - b
   ]
 
-def equations := VeryBusyExpression.equations exampleVB
+def equations := VeryBusyExpression.analysis.equations exampleVB
 
 /--
-info: Analysis◦(1) = ((Analysis•(1) \ {}) ∪ {})
-Analysis•(1) = (Analysis◦(2) ∩ Analysis◦(4))
-Analysis◦(2) = ((Analysis•(2) \ {}) ∪ {(b - a)})
-Analysis•(2) = Analysis◦(3)
-Analysis◦(3) = ((Analysis•(3) \ {}) ∪ {(a - b)})
-Analysis•(3) = ∅
-Analysis◦(4) = ((Analysis•(4) \ {}) ∪ {(b - a)})
-Analysis•(4) = Analysis◦(5)
-Analysis◦(5) = ((Analysis•(5) \ {}) ∪ {(a - b)})
-Analysis•(5) = ∅
+info: Analysis◦(1) = (Analysis•(2) ∩ Analysis•(4))
+Analysis•(1) = ((Analysis◦(1) \ {}) ∪ {})
+Analysis◦(2) = Analysis•(3)
+Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {(b - a)})
+Analysis◦(3) = {}
+Analysis•(3) = ((Analysis◦(3) \ {}) ∪ {(a - b)})
+Analysis◦(4) = Analysis•(5)
+Analysis•(4) = ((Analysis◦(4) \ {}) ∪ {(b - a)})
+Analysis◦(5) = {}
+Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a - b)})
 -/
 #guard_msgs in
 #eval equations.forM (fun eq => IO.println eq.toString)
 
-def solution := chaoticIteration equations (VeryBusyExpression.init exampleVB)
+def solution := chaoticIteration equations (VeryBusyExpression.analysis.init exampleVB)
 
 /--
 info: Analysis◦(1) = [(a - b), (b - a)]
 Analysis•(1) = [(a - b), (b - a)]
-Analysis◦(2) = [(a - b), (b - a)]
-Analysis•(2) = [(a - b)]
-Analysis◦(3) = [(a - b)]
-Analysis•(3) = []
-Analysis◦(4) = [(a - b), (b - a)]
-Analysis•(4) = [(a - b)]
-Analysis◦(5) = [(a - b)]
-Analysis•(5) = []
+Analysis◦(2) = [(a - b)]
+Analysis•(2) = [(a - b), (b - a)]
+Analysis◦(3) = []
+Analysis•(3) = [(a - b)]
+Analysis◦(4) = [(a - b)]
+Analysis•(4) = [(a - b), (b - a)]
+Analysis◦(5) = []
+Analysis•(5) = [(a - b)]
 -/
 #guard_msgs in
 #eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
+  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: VeryBusyExpression.analysis.value => a)}")
 
 end VB
 
