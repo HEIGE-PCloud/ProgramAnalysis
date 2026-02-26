@@ -12,30 +12,34 @@ open While
 
 namespace AvailableExpression
 
-def kill (stmt : Stmt) : Block → List AExp
+@[expose] public def Value := AExp
+  deriving Ord
+
+def kill (stmt : Stmt) : Block → List Value
   | .assign x _ _ => stmt.aexp.filter (fun a' => a'.FV.elem x)
   | _ => ∅
 
-def gen : Block → List AExp
+def gen : Block → List Value
   | .assign x a _ => a.aexp.filter (fun a' => !(a'.FV.elem x))
   | _ => ∅
 
-def entry (s : Stmt) (l : Label) : Equation AExp :=
+def entry (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e0
   if l = s.init then ⟨lhs, .empty⟩
   else ⟨lhs, inters ((s.flow.filter (fun (_, ll) => l == ll)).map (fun (l', _l) => .var (Equation.Atom.mk l' .e1)))⟩
 
-def exit (s : Stmt) (l : Label) : Equation AExp :=
+def exit (s : Stmt) (l : Label) : Equation Value :=
   let lhs := Equation.Atom.mk l .e1
   let b := s.block! l
   ⟨lhs, .union (.diff (.var ⟨l, .e0⟩) (.lit (.ofList (kill s b)))) (.lit (.ofList (gen b)))⟩
 
-public def equations (s : Stmt) : List (Equation AExp) :=
+public def equations (s : Stmt) : List (Equation Value) :=
   s.labels.flatMap (fun l => [entry s l, exit s l])
 
-public def init (s : Stmt) (es : List (Equation AExp))
-  : Std.TreeMap Equation.Atom (Std.TreeSet AExp) :=
-  let univ := Std.TreeSet.ofList s.aexp
+public def init (s : Stmt) (es : List (Equation Value))
+  : Std.TreeMap Equation.Atom (Std.TreeSet Value) :=
+  let aexp : List Value := s.aexp
+  let univ : Std.TreeSet Value := .ofList aexp
   es.foldl (fun acc eq => acc.insert eq.lhs univ) .empty
 
 end AvailableExpression
