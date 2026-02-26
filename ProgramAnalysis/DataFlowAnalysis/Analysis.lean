@@ -33,9 +33,10 @@ def exit (s : Stmt) (l : Label) : Equation AExp :=
 public def equations (s : Stmt) : List (Equation AExp) :=
   s.labels.flatMap (fun l => [entry s l, exit s l])
 
-public def init [Ord α] (es : List (Equation α))
-  : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
-  es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
+public def init (s : Stmt) (es : List (Equation AExp))
+  : Std.TreeMap Equation.Atom (Std.TreeSet AExp) :=
+  let univ := Std.TreeSet.ofList s.aexp
+  es.foldl (fun acc eq => acc.insert eq.lhs univ) .empty
 
 end AvailableExpression
 
@@ -89,7 +90,7 @@ def exit (s : Stmt) (l : Label) : Equation Value :=
 public def equations (s : Stmt) : List (Equation Value) :=
   s.labels.flatMap (fun l => [entry s l, exit s l])
 
-public def init [Ord α] (es : List (Equation α))
+public def init {α} [Ord α] (es : List (Equation α))
   : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
   es.foldl (fun acc eq => acc.insert eq.lhs .empty) .empty
 

@@ -23,7 +23,7 @@ def equations := AvailableExpression.equations exampleAE
 
 #eval equations.forM (fun eq => IO.println eq.toString)
 
-def solution := chaoticIteration equations AvailableExpression.init
+def solution := chaoticIteration equations (AvailableExpression.init exampleAE)
 
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AExp => a.toString)}")
