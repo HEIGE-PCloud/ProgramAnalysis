@@ -4,7 +4,7 @@ import ProgramAnalysis.DataFlowAnalysis
 
 namespace ProgramAnalysis.DataFlowAnalysis
 
-open ProgramAnalysis.DataFlowAnalysis While
+open While
 
 namespace AvailableExpression
 
