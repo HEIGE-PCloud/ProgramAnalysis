@@ -51,7 +51,7 @@ Analysis•(5) = [(a + b)]
 -/
 #guard_msgs in
 #eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AvailableExpression.analysis.value => a)}")
+  (fun (k, v) => IO.println s!"{k} = {v.toList}")
 
 end AvailableExpression
 
@@ -147,7 +147,7 @@ Analysis•(5) = [(a - b)]
 -/
 #guard_msgs in
 #eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: VeryBusyExpression.analysis.value => a)}")
+  (fun (k, v) => IO.println s!"{k} = {v.toList}")
 
 end VeryBusyExpression
 
