@@ -82,7 +82,7 @@ def chaoticIterationOnce [Ord α]
   es.foldl (fun acc eq => acc.insert eq.lhs (eq.rhs.eval env)) env
 
 -- TODO: Prove termination?
-public partial def chaoticIteration' [Ord α]
+partial def chaoticIteration' [Ord α]
   (es : List (Equation α))
   (env : Std.TreeMap Equation.Atom (Std.TreeSet α)) :=
   let env' := chaoticIterationOnce env es

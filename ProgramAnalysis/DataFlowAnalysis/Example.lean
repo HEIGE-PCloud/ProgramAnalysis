@@ -2,11 +2,11 @@ module
 
 import ProgramAnalysis.DataFlowAnalysis
 
-namespace ProgramAnalysis.DataFlowAnalysis.Example
+namespace ProgramAnalysis.DataFlowAnalysis
 
 open ProgramAnalysis.DataFlowAnalysis While
 
-namespace AE
+namespace AvailableExpression
 
 def exampleAE : Stmt := [While|
   x := a + b;
@@ -17,7 +17,7 @@ def exampleAE : Stmt := [While|
   )
 ]
 
-def equations := AvailableExpression.analysis.equations exampleAE
+def equations := analysis.equations exampleAE
 
 
 /--
@@ -35,7 +35,7 @@ Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a + b)})
 #guard_msgs in
 #eval equations.forM IO.println
 
-def solution := chaoticIteration equations (AvailableExpression.analysis.init exampleAE)
+def solution := chaoticIteration equations (analysis.init exampleAE)
 
 /--
 info: Analysis◦(1) = []
@@ -53,9 +53,9 @@ Analysis•(5) = [(a + b)]
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: AvailableExpression.analysis.value => a)}")
 
-end AE
+end AvailableExpression
 
-namespace RD
+namespace ReachingDefinition
 
 def exampleRD : Stmt := [While|
   x := 5;
@@ -66,7 +66,7 @@ def exampleRD : Stmt := [While|
   )
 ]
 
-def equations := ReachingDefinition.analysis.equations exampleRD
+def equations := analysis.equations exampleRD
 
 /--
 info: Analysis◦(1) = {(x, ?), (y, ?)}
@@ -83,7 +83,7 @@ Analysis•(5) = ((Analysis◦(5) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 5)})
 #guard_msgs in
 #eval equations.forM IO.println
 
-def solution := chaoticIteration equations (ReachingDefinition.analysis.init exampleRD)
+def solution := chaoticIteration equations (analysis.init exampleRD)
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -101,9 +101,9 @@ Analysis•(5) = [(x, 5), (y, 4)]
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList}")
 
-end RD
+end ReachingDefinition
 
-namespace VB
+namespace VeryBusyExpression
 
 def exampleVB : Stmt := [While|
   if a > b then
@@ -114,7 +114,7 @@ def exampleVB : Stmt := [While|
     x := a - b
   ]
 
-def equations := VeryBusyExpression.analysis.equations exampleVB
+def equations := analysis.equations exampleVB
 
 /--
 info: Analysis◦(1) = (Analysis•(2) ∩ Analysis•(4))
@@ -131,7 +131,7 @@ Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a - b)})
 #guard_msgs in
 #eval equations.forM IO.println
 
-def solution := chaoticIteration equations (VeryBusyExpression.analysis.init exampleVB)
+def solution := chaoticIteration equations (analysis.init exampleVB)
 
 /--
 info: Analysis◦(1) = [(a - b), (b - a)]
@@ -149,9 +149,9 @@ Analysis•(5) = [(a - b)]
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList.map (fun a: VeryBusyExpression.analysis.value => a)}")
 
-end VB
+end VeryBusyExpression
 
-namespace LV
+namespace LiveVariable
 
 def exampleLV : Stmt := [While|
   x := 2;
@@ -161,7 +161,7 @@ def exampleLV : Stmt := [While|
   x := z
 ]
 
-def equations := LiveVariable.analysis.equations exampleLV
+def equations := analysis.equations exampleLV
 
 /--
 info: Analysis◦(1) = Analysis•(2)
@@ -182,7 +182,7 @@ Analysis•(7) = ((Analysis◦(7) \ {x}) ∪ {z})
 #guard_msgs in
 #eval equations.forM IO.println
 
-def solution := chaoticIteration equations (LiveVariable.analysis.init exampleLV)
+def solution := chaoticIteration equations (analysis.init exampleLV)
 
 /--
 info: Analysis◦(1) = []
@@ -203,6 +203,6 @@ Analysis•(7) = [z]
 #guard_msgs in
 #eval solution.toList.forM
   (fun (k, v) => IO.println s!"{k} = {v.toList}")
-end LV
+end LiveVariable
 
-end ProgramAnalysis.DataFlowAnalysis.Example
+end ProgramAnalysis.DataFlowAnalysis
