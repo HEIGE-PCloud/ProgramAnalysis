@@ -13,3 +13,8 @@ root = "Main"
 name = "batteries"
 scope = "leanprover-community"
 rev = "main"
+
+[[require]]
+name = "mathlib4"
+scope = "leanprover-community"
+rev = "v4.28.0"

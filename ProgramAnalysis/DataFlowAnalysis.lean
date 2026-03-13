@@ -1,5 +1,6 @@
 module
 
+import ProgramAnalysis.DataFlowAnalysis.MonotoneFramework
 public import ProgramAnalysis.DataFlowAnalysis.While
 public import ProgramAnalysis.DataFlowAnalysis.Analysis
 public meta import ProgramAnalysis.DataFlowAnalysis.Meta
