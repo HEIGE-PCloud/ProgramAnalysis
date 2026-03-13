@@ -1,5 +1,5 @@
 module
-import Mathlib.Data.Finset.Basic
+public import Mathlib.Data.Finset.Basic
 
 namespace ProgramAnalysis.DataFlowAnalysis
 
@@ -22,10 +22,45 @@ public instance : PartialOrder Int where
 
 
 /-- The powerset of a type `X`, ordered by subset inclusion, forms a partial order. -/
-instance {X : Type} : PartialOrder (Finset X) where
+public instance {X : Type} : PartialOrder (Finset X) where
   leq A B            := A ⊆ B
   refl A             := Finset.Subset.refl A
   trans _ _ _ h1 h2  := Finset.Subset.trans h1 h2
   antisymm _ _ h1 h2 := Finset.Subset.antisymm h1 h2
+
+section Bounds
+
+variable {L : Type} [PartialOrder L]
+
+/-- `u` is an upper bound of a set `Y` if every element of `Y` is ⊑ u. -/
+def UpperBound (Y : Set L) (u : L) : Prop :=
+  ∀ y, Y y → y ⊑ u
+
+/-- `l` is a lower bound of a set `Y` if l is ⊑ every element of `Y`. -/
+def LowerBound (Y : Set L) (l : L) : Prop :=
+  ∀ y, Y y → l ⊑ y
+
+/-- `u` is the least upper bound (join) of `Y` if it is an upper bound and
+    is ⊑ every other upper bound. -/
+public def LeastUpperBound (Y : Set L) (u : L) : Prop :=
+  UpperBound Y u ∧ ∀ u', UpperBound Y u' → u ⊑ u'
+
+/-- `l` is the greatest lower bound (meet) of `Y` if it is a lower bound and
+    every other lower bound is ⊑ it. -/
+public def GreatestLowestBound (Y : Set L) (l : L) : Prop :=
+  LowerBound Y l ∧ ∀ l', LowerBound Y l' → l' ⊑ l
+
+end Bounds
+
+/-- A complete lattice is a partial order where every subset has both a least upper bound
+    (`sSup`) and a greatest lower bound (`sInf`). -/
+public class CompleteLattice (L : Type) extends PartialOrder L where
+  sSup    : Set L → L
+  sInf    : Set L → L
+  is_lub  : ∀ (Y : Set L), LeastUpperBound Y (sSup Y)
+  is_glb  : ∀ (Y : Set L), GreatestLowestBound Y (sInf Y)
+
+scoped notation:65 "⨆ " => CompleteLattice.sSup
+scoped notation:65 "⨅ " => CompleteLattice.sInf
 
 end ProgramAnalysis.DataFlowAnalysis
