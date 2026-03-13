@@ -94,6 +94,15 @@ public inductive Stmt
   | swhile : BoolAtom → Label → Stmt → Stmt
 deriving Repr, Ord, DecidableEq
 
+public def Stmt.toString : Stmt → String
+  | .assign var arithAtom label => s!"[{var} := {arithAtom}]{label.toSuperscriptString}"
+  | .skip label => s!"[skip]{label.toSuperscriptString}"
+  | .seq s1 s2 => s!"{s1.toString};\n{s2.toString}"
+  | .sif boolAtom label s1 s2 => s!"if [{boolAtom}]{label.toSuperscriptString} then ({s1.toString}) else ({s2.toString})"
+  | .swhile boolAtom label s => s!"while [{boolAtom}]{label.toSuperscriptString} do ({s.toString})"
+
+public instance : ToString Stmt := ⟨Stmt.toString⟩
+
 /--
 [y := x]¹;
 [z := y]²;

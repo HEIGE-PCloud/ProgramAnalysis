@@ -205,4 +205,69 @@ Analysis•(7) = [z]
   (fun (k, v) => IO.println s!"{k} = {v.toList}")
 end LiveVariable
 
+namespace Exam2425Q1
+
+open ReachingDefinition
+
+def program : Stmt := [While|
+  x := 0;
+  (if x < y
+    then y := x
+    else (while y < 0 do (y := x)));
+  x := y + x
+]
+
+/--
+info: [x := 0]¹;
+if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
+[x := (y + x)]⁶
+-/
+#guard_msgs in
+#eval IO.println program.toString
+
+/-- info: [(4, 5), (5, 4), (2, 3), (2, 4), (3, 6), (4, 6), (1, 2)] -/
+#guard_msgs in
+#eval program.flow
+
+def equations := analysis.equations program
+
+/--
+info: Analysis◦(1) = {(x, ?), (y, ?)}
+Analysis•(1) = ((Analysis◦(1) \ {(x, ?), (x, 1), (x, 6)}) ∪ {(x, 1)})
+Analysis◦(2) = Analysis•(1)
+Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {})
+Analysis◦(3) = Analysis•(2)
+Analysis•(3) = ((Analysis◦(3) \ {(y, ?), (y, 3), (y, 5)}) ∪ {(y, 3)})
+Analysis◦(4) = (Analysis•(5) ∪ Analysis•(2))
+Analysis•(4) = ((Analysis◦(4) \ {}) ∪ {})
+Analysis◦(5) = Analysis•(4)
+Analysis•(5) = ((Analysis◦(5) \ {(y, ?), (y, 3), (y, 5)}) ∪ {(y, 5)})
+Analysis◦(6) = (Analysis•(3) ∪ Analysis•(4))
+Analysis•(6) = ((Analysis◦(6) \ {(x, ?), (x, 1), (x, 6)}) ∪ {(x, 6)})
+-/
+#guard_msgs in
+#eval equations.forM IO.println
+
+def solution := chaoticIteration equations (analysis.init program)
+
+/--
+info: Analysis◦(1) = [(x, ?), (y, ?)]
+Analysis•(1) = [(x, 1), (y, ?)]
+Analysis◦(2) = [(x, 1), (y, ?)]
+Analysis•(2) = [(x, 1), (y, ?)]
+Analysis◦(3) = [(x, 1), (y, ?)]
+Analysis•(3) = [(x, 1), (y, 3)]
+Analysis◦(4) = [(x, 1), (y, ?), (y, 5)]
+Analysis•(4) = [(x, 1), (y, ?), (y, 5)]
+Analysis◦(5) = [(x, 1), (y, ?), (y, 5)]
+Analysis•(5) = [(x, 1), (y, 5)]
+Analysis◦(6) = [(x, 1), (y, ?), (y, 3), (y, 5)]
+Analysis•(6) = [(x, 6), (y, ?), (y, 3), (y, 5)]
+-/
+#guard_msgs in
+#eval solution.toList.forM
+  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+
+end Exam2425Q1
+
 end ProgramAnalysis.DataFlowAnalysis
