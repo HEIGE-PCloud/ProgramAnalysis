@@ -95,4 +95,33 @@ public def chaoticIteration [Ord α]
   : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
   chaoticIteration' es (init es)
 
+
+/-!
+## The MFP Solution
+
+Input: an instance of a Monotone Framework: (L, 𝓕, F, E, ι, f)
+Output: MFP◦, MFP•
+
+Step 1: Initialization of W and Analysis
+  W := nil;
+  for all (l, l') in F do
+    W := cons((l, l'), W);
+  for all l in F or E do
+    if l in E then Analysis[l] := ι
+              else Analysis[l] := ⊥_L;
+
+Step 2: Iteration (updating W and Analysis)
+  while W ≠ nil do
+    l := fst(head(W)); l' := snd(head(W));
+    W := tail(W);
+    if fₗ(Analysis[l]) !⊑ Analysis[l'] then
+      Analysis[l'] := Analysis[l'] ⊔ fₗ(Analysis[l]);
+      for all (l', l'') in F do W := cons((l', l''), W);
+
+Step 3: Presenting the result (MFP◦ and MFP•)
+for all l in F or E do
+  MFP◦(l) := Analysis[l];
+  MFP•(l) := fₗ(Analysis[l])
+-/
+
 end ProgramAnalysis.DataFlowAnalysis
