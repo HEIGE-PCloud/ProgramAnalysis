@@ -253,7 +253,7 @@ lemma eval_sigma_ne_bot (env : Std.TreeMap Var ZT) (a : ArithAtom):
 theorem eval_bot (σ : State) (a : ArithAtom) :
     eval σ a = ZTB.bot ↔ σ = State.bot := by
   constructor
-  · grind [State]
+  · grind only [eval_sigma_ne_bot, State]
   · induction a <;> grind only [eval, ZTB.eval]
 
 def transfer (stmt : Stmt) (l : Label) (state : State) :  State :=
