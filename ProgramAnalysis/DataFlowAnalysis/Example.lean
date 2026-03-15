@@ -15,8 +15,6 @@ def program : Stmt := [While|
   )
 ]
 
-def equations := analysis.equations program
-
 def solution := analysis.MFP program
 
 /--
@@ -46,8 +44,6 @@ def program : Stmt := [While|
     x := x - 1
   )
 ]
-
-def equations := analysis.equations program
 
 def solution := analysis.MFP program
 
@@ -79,8 +75,6 @@ def program : Stmt := [While|
     x := a - b
   ]
 
-def equations := analysis.equations program
-
 def solution := analysis.MFP program
 
 /--
@@ -109,8 +103,6 @@ def program : Stmt := [While|
   (if y > x then z := y else z := y * y);
   x := z
 ]
-
-def equations := analysis.equations program
 
 def solution := analysis.MFP program
 
@@ -151,7 +143,7 @@ if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
 [x := (y + x)]⁶
 -/
 #guard_msgs in
-#eval IO.println program.toString
+#eval IO.println program
 
 /-- info: [(4, 5), (5, 4), (2, 3), (2, 4), (3, 6), (4, 6), (1, 2)] -/
 #guard_msgs in
