@@ -224,10 +224,10 @@ structure MonotoneFramework where
   leq : value → value → Bool
   join : value → value → value
   bot : Stmt → value
-  extremeValue : Stmt → Value
+  extremeValue : Stmt → value
   extremeLabel : Stmt → Std.TreeSet Label
   flow : Stmt → List (Label × Label)
-  transfer : Stmt → Label → Value → Value
+  transfer : Stmt → Label → value → value
 
 def AE : MonotoneFramework := {
   value := Value
@@ -239,7 +239,59 @@ def AE : MonotoneFramework := {
   flow := flow
   transfer := f
 }
+public inductive Equation.AtomType
+  | e0
+  | e1
+deriving DecidableEq, Repr, Ord
 
+public def Equation.AtomType.toString : Equation.AtomType → String
+  | e0 => "◦"
+  | e1 => "•"
+
+public instance : ToString Equation.AtomType := ⟨Equation.AtomType.toString⟩
+
+public structure Equation.Atom where
+  label : Label
+  ty : Equation.AtomType
+deriving DecidableEq, Repr, Ord
+
+public inductive Equation.Expr (value : Type) where
+  | bot : Equation.Expr value
+  | lit : value → Equation.Expr value
+  | atom : Equation.Atom → Equation.Expr value
+  | join : Equation.Expr value → Equation.Expr value → Equation.Expr value
+  | app : (value → value) → Equation.Expr value → Equation.Expr value
+
+structure Equation (value : Type) : Type where
+  lhs : Equation.Atom
+  rhs : Equation.Expr value
+
+public def foldExpr (op : Equation.Expr α → Equation.Expr α → Equation.Expr α) : List (Equation.Expr α) → Equation.Expr α
+  | [] => .bot
+  | x :: [] => x
+  | x :: xs => op x (foldExpr op xs)
+
+def e0 (stmt : Stmt) (l : Label) (m : MonotoneFramework) : Equation m.value :=
+  let E := m.extremeLabel stmt
+  let ι := m.extremeValue stmt
+  let F := m.flow stmt
+  let lhs := ⟨l, .e0⟩
+  let rhs :=
+    if l ∈ E then
+      .lit ι
+    else
+      let as : List (Equation.Expr (m.value)) := F.filterMap (fun (l', ll) =>
+        if l == ll then
+          some (Equation.Expr.atom ⟨l', .e1⟩)
+        else
+          none)
+      foldExpr .join as
+  ⟨lhs, rhs⟩
+
+def e1 (stmt : Stmt) (l : Label) (m : MonotoneFramework) : Equation m.value :=
+  let lhs := ⟨l, .e1⟩
+  let rhs := .app (m.transfer stmt l) (.atom ⟨l, .e0⟩)
+  ⟨lhs, rhs⟩
 
 end Test
 end ProgramAnalysis.DataFlowAnalysis
