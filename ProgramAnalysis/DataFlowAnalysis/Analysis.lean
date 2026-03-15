@@ -260,7 +260,7 @@ public inductive Equation.Expr (value : Type) where
   | lit : value → Equation.Expr value
   | atom : Equation.Atom → Equation.Expr value
   | join : Equation.Expr value → Equation.Expr value → Equation.Expr value
-  | app : (value → value) → Equation.Expr value → Equation.Expr value
+  | app : (value → value) → Equation.Atom → Equation.Expr value
 
 structure Equation (value : Type) : Type where
   lhs : Equation.Atom
@@ -290,8 +290,16 @@ def e0 (stmt : Stmt) (l : Label) (m : MonotoneFramework) : Equation m.value :=
 
 def e1 (stmt : Stmt) (l : Label) (m : MonotoneFramework) : Equation m.value :=
   let lhs := ⟨l, .e1⟩
-  let rhs := .app (m.transfer stmt l) (.atom ⟨l, .e0⟩)
+  let rhs := .app (m.transfer stmt l) ⟨l, .e0⟩
   ⟨lhs, rhs⟩
+
+def equations (m : MonotoneFramework) (s : Stmt) : List (Equation m.value) :=
+  s.labels.flatMap (fun l => [e0 s l m, e1 s l m])
+
+def init (m : MonotoneFramework) (s : Stmt) (es : List (Equation m.value))
+  : Std.TreeMap Equation.Atom m.value :=
+  let bot := m.bot s
+  es.foldl (fun acc eq => acc.insert eq.lhs bot) ∅
 
 end Test
 end ProgramAnalysis.DataFlowAnalysis
