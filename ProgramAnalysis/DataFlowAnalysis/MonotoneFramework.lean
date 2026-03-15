@@ -216,6 +216,7 @@ public def MonotoneFramework.MFP (m : MonotoneFramework) (stmt : Stmt) : Std.Tre
   let labels := E.insertMany (F.flatMap (fun (a, b) => [a, b]))
   let mut W : List (Label × Label) := []
   let mut Analysis : Std.TreeMap Label m.value := ∅
+  let get : Std.TreeMap Label m.value → Label → m.value := fun m l => m.getD l bot
 
   -- Step 1: Initialization
   for (l, l') in F do
@@ -230,8 +231,8 @@ public def MonotoneFramework.MFP (m : MonotoneFramework) (stmt : Stmt) : Std.Tre
   while h : W ≠ [] do
     let (l, l')  := W.head h
     W := W.tail
-    let a1 := f l (Analysis.getD l bot)
-    let a2 := Analysis.getD l' bot
+    let a1 := f l (get Analysis l)
+    let a2 := get Analysis l'
     if not (leq a1 a2) then
       Analysis := Analysis.insert l' (join a1 a2)
       for (l'', l''') in F.filter (fun (x, _) => x == l') do
@@ -240,8 +241,8 @@ public def MonotoneFramework.MFP (m : MonotoneFramework) (stmt : Stmt) : Std.Tre
   -- Step 3: Presenting the result
   let mut result := ∅
   for l in labels do
-    result := result.insert ⟨l, .e0⟩ (Analysis.getD l bot)
-    result := result.insert ⟨l, .e1⟩ (f l (Analysis.getD l bot))
+    result := result.insert ⟨l, .e0⟩ (get Analysis l)
+    result := result.insert ⟨l, .e1⟩ (f l (get Analysis l))
   return result
 
 end ProgramAnalysis.DataFlowAnalysis
