@@ -204,5 +204,42 @@ def f (stmt : Stmt) (l : Label) (v : Value) : Value :=
   (v \ kill stmt B) ∪ gen stmt B
   where B := stmt.block! l
 
+def flow (stmt : Stmt) := stmt.flow
+
+def extremeLabel (stmt : Stmt) : Std.TreeSet Label := {stmt.init}
+
+def extremeValue (_ : Stmt) : Value := ∅
+
+def bot (stmt : Stmt) : Value := .ofList stmt.aexp
+
+def join : Value → Value → Value := .inter
+
+public def subset (s1 s2 : Std.TreeSet α cmp) : Bool :=
+  s1.all s2.contains
+
+def leq (v1 : Value) (v2 : Value) : Bool := subset v2 v1
+
+structure MonotoneFramework where
+  value : Type
+  leq : value → value → Bool
+  join : value → value → value
+  bot : Stmt → value
+  extremeValue : Stmt → Value
+  extremeLabel : Stmt → Std.TreeSet Label
+  flow : Stmt → List (Label × Label)
+  transfer : Stmt → Label → Value → Value
+
+def AE : MonotoneFramework := {
+  value := Value
+  leq := leq
+  join := join
+  bot := bot
+  extremeValue := extremeValue
+  extremeLabel := extremeLabel
+  flow := flow
+  transfer := f
+}
+
+
 end Test
 end ProgramAnalysis.DataFlowAnalysis
