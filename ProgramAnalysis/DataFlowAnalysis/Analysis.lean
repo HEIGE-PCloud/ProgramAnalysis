@@ -225,10 +225,10 @@ def ofZT : ZT → ZTB
   | .top => .top
   | .z x => .z x
 
-def ofZTB : ZTB → ZT
+def ofZTB (z : ZTB) (h : z ≠ ZTB.bot): ZT :=
+  match z with
   | .top => .top
   | .z x => .z x
-  | .bot => .top -- TODO: ?
 
 def eval : State → ArithAtom → ZTB
   | .bot, .var _ => .bot
@@ -237,12 +237,48 @@ def eval : State → ArithAtom → ZTB
   | .sigma _, .const n => .z n
   | σ, .op op a₁ a₂ => ZTB.eval op (eval σ a₁) (eval σ a₂)
 
+lemma ofZT_ne_bot (z : ZT) : ofZT z ≠ ZTB.bot := by
+  cases z <;> simp [ofZT]
+
+lemma ZTB_eval_ne_bot {op : Op_a} {v₁ v₂ : ZTB}
+    (h₁ : v₁ ≠ ZTB.bot) (h₂ : v₂ ≠ ZTB.bot) : ZTB.eval op v₁ v₂ ≠ ZTB.bot := by
+  rcases v₁ with _ | _ | v₁
+  · simp [ZTB.eval]
+  · exact absurd rfl h₁
+  · rcases v₂ with _ | _ | v₂
+    · simp [ZTB.eval]
+    · exact absurd rfl h₂
+    · cases op <;> simp [ZTB.eval]
+
+lemma eval_sigma_ne_bot (env : Std.TreeMap Var ZT) :
+    ∀ a : ArithAtom, eval (.sigma env) a ≠ ZTB.bot
+  | .var x   => ofZT_ne_bot _
+  | .const _ => by simp [eval]
+  | .op op a₁ a₂ => by
+      simp only [eval]
+      exact ZTB_eval_ne_bot (eval_sigma_ne_bot env a₁) (eval_sigma_ne_bot env a₂)
+
+theorem eval_bot (σ : State) (a : ArithAtom) :
+    eval σ a = ZTB.bot ↔ σ = State.bot := by
+  constructor
+  · intro h
+    cases σ with
+    | bot => rfl
+    | sigma env => exact absurd h (eval_sigma_ne_bot env a)
+  · rintro rfl
+    induction a with
+    | var x => simp [eval]
+    | const n => simp [eval]
+    | op op a₁ a₂ ih₁ ih₂ =>
+      simp only [eval, ih₁, ih₂]
+      cases op <;> rfl
+
 def transfer (stmt : Stmt) (l : Label) (state : State) :  State :=
   let B := stmt.block! l
   match B with
     | .assign x a _ =>
       match state with
-        | s@(.sigma σ) => .sigma (σ.insert x (ofZTB (eval s a)))
+        | s@(.sigma σ) => .sigma (σ.insert x (ofZTB (eval s a) (by grind [eval_bot])))
         | .bot => .bot
     | _ => state
 
