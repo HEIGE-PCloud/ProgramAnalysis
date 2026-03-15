@@ -4,11 +4,9 @@ import ProgramAnalysis.DataFlowAnalysis
 
 namespace ProgramAnalysis.DataFlowAnalysis
 
-open While
-
 namespace AvailableExpression
 
-def exampleAE : Stmt := [While|
+def program : Stmt := [While|
   x := a + b;
   y := a * b;
   while y > a + b do (
@@ -17,25 +15,9 @@ def exampleAE : Stmt := [While|
   )
 ]
 
-def equations := analysis.equations exampleAE
+def equations := analysis.equations program
 
-
-/--
-info: Analysis◦(1) = {}
-Analysis•(1) = ((Analysis◦(1) \ {}) ∪ {(a + b)})
-Analysis◦(2) = Analysis•(1)
-Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {(a * b)})
-Analysis◦(3) = (Analysis•(5) ∩ Analysis•(2))
-Analysis•(3) = ((Analysis◦(3) \ {}) ∪ {})
-Analysis◦(4) = Analysis•(3)
-Analysis•(4) = ((Analysis◦(4) \ {(a + b), (a + 1), (a * b)}) ∪ {})
-Analysis◦(5) = Analysis•(4)
-Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a + b)})
--/
-#guard_msgs in
-#eval equations.forM IO.println
-
-def solution := chaoticIteration equations (analysis.init exampleAE)
+def solution := chaoticIteration analysis program equations
 
 /--
 info: Analysis◦(1) = []
@@ -56,7 +38,7 @@ end AvailableExpression
 
 namespace ReachingDefinition
 
-def exampleRD : Stmt := [While|
+def program : Stmt := [While|
   x := 5;
   y := 1;
   while x > 1 do (
@@ -65,24 +47,9 @@ def exampleRD : Stmt := [While|
   )
 ]
 
-def equations := analysis.equations exampleRD
+def equations := analysis.equations program
 
-/--
-info: Analysis◦(1) = {(x, ?), (y, ?)}
-Analysis•(1) = ((Analysis◦(1) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 1)})
-Analysis◦(2) = Analysis•(1)
-Analysis•(2) = ((Analysis◦(2) \ {(y, ?), (y, 2), (y, 4)}) ∪ {(y, 2)})
-Analysis◦(3) = (Analysis•(5) ∪ Analysis•(2))
-Analysis•(3) = ((Analysis◦(3) \ {}) ∪ {})
-Analysis◦(4) = Analysis•(3)
-Analysis•(4) = ((Analysis◦(4) \ {(y, ?), (y, 2), (y, 4)}) ∪ {(y, 4)})
-Analysis◦(5) = Analysis•(4)
-Analysis•(5) = ((Analysis◦(5) \ {(x, ?), (x, 1), (x, 5)}) ∪ {(x, 5)})
--/
-#guard_msgs in
-#eval equations.forM IO.println
-
-def solution := chaoticIteration equations (analysis.init exampleRD)
+def solution := chaoticIteration analysis program equations
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -103,7 +70,7 @@ end ReachingDefinition
 
 namespace VeryBusyExpression
 
-def exampleVB : Stmt := [While|
+def program : Stmt := [While|
   if a > b then
     x := b - a;
     y := a - b
@@ -112,24 +79,9 @@ def exampleVB : Stmt := [While|
     x := a - b
   ]
 
-def equations := analysis.equations exampleVB
+def equations := analysis.equations program
 
-/--
-info: Analysis◦(1) = (Analysis•(2) ∩ Analysis•(4))
-Analysis•(1) = ((Analysis◦(1) \ {}) ∪ {})
-Analysis◦(2) = Analysis•(3)
-Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {(b - a)})
-Analysis◦(3) = {}
-Analysis•(3) = ((Analysis◦(3) \ {}) ∪ {(a - b)})
-Analysis◦(4) = Analysis•(5)
-Analysis•(4) = ((Analysis◦(4) \ {}) ∪ {(b - a)})
-Analysis◦(5) = {}
-Analysis•(5) = ((Analysis◦(5) \ {}) ∪ {(a - b)})
--/
-#guard_msgs in
-#eval equations.forM IO.println
-
-def solution := chaoticIteration equations (analysis.init exampleVB)
+def solution := chaoticIteration analysis program equations
 
 /--
 info: Analysis◦(1) = [(a - b), (b - a)]
@@ -150,7 +102,7 @@ end VeryBusyExpression
 
 namespace LiveVariable
 
-def exampleLV : Stmt := [While|
+def program : Stmt := [While|
   x := 2;
   y := 4;
   x := 1;
@@ -158,28 +110,9 @@ def exampleLV : Stmt := [While|
   x := z
 ]
 
-def equations := analysis.equations exampleLV
+def equations := analysis.equations program
 
-/--
-info: Analysis◦(1) = Analysis•(2)
-Analysis•(1) = ((Analysis◦(1) \ {x}) ∪ {})
-Analysis◦(2) = Analysis•(3)
-Analysis•(2) = ((Analysis◦(2) \ {y}) ∪ {})
-Analysis◦(3) = Analysis•(4)
-Analysis•(3) = ((Analysis◦(3) \ {x}) ∪ {})
-Analysis◦(4) = (Analysis•(5) ∪ Analysis•(6))
-Analysis•(4) = ((Analysis◦(4) \ {}) ∪ {x, y})
-Analysis◦(5) = Analysis•(7)
-Analysis•(5) = ((Analysis◦(5) \ {z}) ∪ {y})
-Analysis◦(6) = Analysis•(7)
-Analysis•(6) = ((Analysis◦(6) \ {z}) ∪ {y})
-Analysis◦(7) = {}
-Analysis•(7) = ((Analysis◦(7) \ {x}) ∪ {z})
--/
-#guard_msgs in
-#eval equations.forM IO.println
-
-def solution := chaoticIteration equations (analysis.init exampleLV)
+def solution := chaoticIteration analysis program equations
 
 /--
 info: Analysis◦(1) = []
@@ -228,24 +161,7 @@ if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
 
 def equations := analysis.equations program
 
-/--
-info: Analysis◦(1) = {(x, ?), (y, ?)}
-Analysis•(1) = ((Analysis◦(1) \ {(x, ?), (x, 1), (x, 6)}) ∪ {(x, 1)})
-Analysis◦(2) = Analysis•(1)
-Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {})
-Analysis◦(3) = Analysis•(2)
-Analysis•(3) = ((Analysis◦(3) \ {(y, ?), (y, 3), (y, 5)}) ∪ {(y, 3)})
-Analysis◦(4) = (Analysis•(5) ∪ Analysis•(2))
-Analysis•(4) = ((Analysis◦(4) \ {}) ∪ {})
-Analysis◦(5) = Analysis•(4)
-Analysis•(5) = ((Analysis◦(5) \ {(y, ?), (y, 3), (y, 5)}) ∪ {(y, 5)})
-Analysis◦(6) = (Analysis•(3) ∪ Analysis•(4))
-Analysis•(6) = ((Analysis◦(6) \ {(x, ?), (x, 1), (x, 6)}) ∪ {(x, 6)})
--/
-#guard_msgs in
-#eval equations.forM IO.println
-
-def solution := chaoticIteration equations (analysis.init program)
+def solution := chaoticIteration analysis program equations
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -278,20 +194,7 @@ open LiveVariable
 
 def equations := analysis.equations program
 
-/--
-info: Analysis◦(1) = Analysis•(2)
-Analysis•(1) = ((Analysis◦(1) \ {x}) ∪ {})
-Analysis◦(2) = (Analysis•(3) ∪ Analysis•(4))
-Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {y})
-Analysis◦(3) = Analysis•(2)
-Analysis•(3) = ((Analysis◦(3) \ {x}) ∪ {x})
-Analysis◦(4) = {}
-Analysis•(4) = ((Analysis◦(4) \ {x}) ∪ {})
--/
-#guard_msgs in
-#eval equations.forM IO.println
-
-def solution := chaoticIteration equations (analysis.init program)
+def solution := chaoticIteration analysis program equations
 
 /--
 info: Analysis◦(1) = [x, y]

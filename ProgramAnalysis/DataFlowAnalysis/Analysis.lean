@@ -7,6 +7,9 @@ public import ProgramAnalysis.DataFlowAnalysis.MonotoneFramework
 public def subset [Ord α] (s1 s2 : Std.TreeSet α) : Bool :=
   s1.all s2.contains
 
+public instance [ToString α] [Ord α] : ToString (Std.TreeSet α) where
+  toString v := ToString.toString v.toList
+
 namespace ProgramAnalysis.DataFlowAnalysis
 
 public def defaultTransfer [Ord value]
@@ -21,6 +24,7 @@ namespace AvailableExpression
 
 public abbrev Value := Std.TreeSet AExp
 
+
 def kill (stmt : Stmt) : Block → Value
   | .assign x _ _ => .ofList (stmt.aexp.filter (fun a' => a'.FV.elem x))
   | _ => ∅
@@ -31,6 +35,8 @@ def gen (_ : Stmt) : Block → Value
 
 public def analysis : MonotoneFramework := {
   value := Value
+  beq := inferInstance
+  toString := inferInstance
   leq := flip subset
   join := .inter
   bot := fun stmt => .ofList stmt.aexp
@@ -81,6 +87,8 @@ def extremeValue (stmt : Stmt) : Value :=
 public def analysis : MonotoneFramework :=
   {
     value := Value
+    beq := inferInstance
+    toString := inferInstance
     leq := subset
     join := .union
     bot := fun _ => ∅
@@ -108,6 +116,8 @@ def gen (_ : Stmt) : Block → Value
 public def analysis : MonotoneFramework :=
   {
     value := Value
+    beq := inferInstance
+    toString := inferInstance
     leq := flip subset
     join := .inter
     bot := fun stmt => .ofList stmt.aexp
@@ -134,14 +144,16 @@ def gen (_ : Stmt) : Block → Value
 
 public def analysis : MonotoneFramework :=
  {
-   value := Value
-   leq := subset
-   join := .union
-   bot := fun _ => ∅
-   extremeValue := fun _ => ∅
-   extremeLabel := fun stmt => .ofList stmt.final
-   flow := Stmt.flowR
-   transfer := defaultTransfer kill gen
+    value := Value
+    beq := inferInstance
+    toString := inferInstance
+    leq := subset
+    join := .union
+    bot := fun _ => ∅
+    extremeValue := fun _ => ∅
+    extremeLabel := fun stmt => .ofList stmt.final
+    flow := Stmt.flowR
+    transfer := defaultTransfer kill gen
  }
 
 end LiveVariable

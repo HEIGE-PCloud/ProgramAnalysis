@@ -4,9 +4,9 @@ public import Lean
 public import ProgramAnalysis.DataFlowAnalysis.While
 
 public section
-namespace ProgramAnalysis.ControlFlowAnalysis.While.Meta
+namespace ProgramAnalysis.DataFlowAnalysis
 
-open Lean Elab Meta ProgramAnalysis.DataFlowAnalysis.While
+open Lean Elab Meta
 
 declare_syntax_cat while_op_a
 syntax "+" : while_op_a
@@ -151,5 +151,5 @@ info: Stmt.build
   y := 0
 ]
 
-end ProgramAnalysis.ControlFlowAnalysis.While.Meta
+end ProgramAnalysis.DataFlowAnalysis
 end

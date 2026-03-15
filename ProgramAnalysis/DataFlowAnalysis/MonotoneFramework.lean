@@ -70,7 +70,8 @@ scoped notation:65 "⨅ " => CompleteLattice.sInf
 
 public structure MonotoneFramework where
   value : Type
-  h : BEq value
+  beq : BEq value
+  toString : ToString value
   leq : value → value → Bool
   join : value → value → value
   bot : Stmt → value
@@ -78,6 +79,10 @@ public structure MonotoneFramework where
   extremeLabel : Stmt → Std.TreeSet Label
   flow : Stmt → List (Label × Label)
   transfer : Stmt → Label → value → value
+
+public instance (m : MonotoneFramework) : BEq m.value := m.beq
+
+public instance (m : MonotoneFramework) : ToString m.value := m.toString
 
 public inductive Equation.AtomType
   | e0
@@ -187,7 +192,6 @@ partial def chaoticIteration'
   (es : List (Equation m.value))
   (env : Std.TreeMap Equation.Atom m.value) :=
   let env' := chaoticIterationOnce m stmt env es
-  have _ : BEq m.value := m.h
   if env' == env then env
   else chaoticIteration' m stmt es env'
 
@@ -197,7 +201,7 @@ public def chaoticIteration (m : MonotoneFramework)
   : Std.TreeMap Equation.Atom m.value :=
   chaoticIteration' m stmt es (m.init stmt es)
 
-public def println (m : MonotoneFramework) [ToString m.value]
+public def println {m : MonotoneFramework} [ToString m.value]
   (solution : Std.TreeMap Equation.Atom m.value) : IO Unit :=
   solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v}")
 
