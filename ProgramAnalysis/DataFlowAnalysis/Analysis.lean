@@ -158,4 +158,108 @@ public def analysis : MonotoneFramework :=
 
 end LiveVariable
 
+namespace ConstantPropagation
+
+public inductive ZT where
+  | top : ZT
+  | z : Int → ZT
+deriving BEq, Inhabited
+
+public def ZT.toString : ZT → String
+  | .top => "⊤"
+  | z x => ToString.toString x
+
+def ZT.leq : ZT → ZT → Bool
+  | _, .top => true
+  | .z x, .z y => x = y
+  | .top, _ => false
+
+def ZT.join : ZT → ZT → ZT
+  | .top, _ => .top
+  | _, .top => .top
+  | .z x, .z y => if x == y then .z x else .top
+
+public instance : ToString ZT := ⟨ZT.toString⟩
+
+public inductive State where
+  | bot : State
+  | sigma : Std.TreeMap Var ZT → State
+deriving BEq
+
+public def State.toString : State → String
+  | .bot => "⊥"
+  | .sigma env => ToString.toString env.toList
+
+def State.leq : State → State → Bool
+  | .bot, _ => true
+  | .sigma σ₁, .sigma σ₂ =>
+    σ₁.keys.all (fun x => ZT.leq (σ₁.get! x) (σ₂.get! x))
+  | _, .bot => false
+
+def State.join : State → State → State
+  | .bot, x => x
+  | x, .bot => x
+  | .sigma σ₁, .sigma σ₂ =>
+    .sigma (σ₁.map (fun x z => ZT.join z (σ₂.get! x)))
+
+public instance : ToString State := ⟨State.toString⟩
+
+def extremeValue (stmt : Stmt) : State :=
+  .sigma (.ofList (stmt.FV.map (fun x => (x, ZT.top))))
+
+inductive ZTB where
+  | top
+  | bot
+  | z : Int → ZTB
+
+def ZTB.eval : Op_a → ZTB → ZTB → ZTB
+  | _, .top, _ => .top
+  | _, _, .top => .top
+  | .plus, .z x, .z y => .z (x + y)
+  | .minus, .z x, .z y => .z (x - y)
+  | .times, .z x, .z y => .z (x * y)
+  | .div, .z x, .z y => .z (x / y)
+  | _, _, _ => .bot
+
+def ofZT : ZT → ZTB
+  | .top => .top
+  | .z x => .z x
+
+def ofZTB : ZTB → ZT
+  | .top => .top
+  | .z x => .z x
+  | .bot => .top -- TODO: ?
+
+def eval : State → ArithAtom → ZTB
+  | .bot, .var _ => .bot
+  | .sigma σ, .var x => ofZT (σ.get! x)
+  | .bot, .const _ => .bot
+  | .sigma _, .const n => .z n
+  | σ, .op op a₁ a₂ => ZTB.eval op (eval σ a₁) (eval σ a₂)
+
+def transfer (stmt : Stmt) (l : Label) (state : State) :  State :=
+  let B := stmt.block! l
+  match B with
+    | .assign x a _ =>
+      match state with
+        | s@(.sigma σ) => .sigma (σ.insert x (ofZTB (eval s a)))
+        | .bot => .bot
+    | _ => state
+
+public def analysis : MonotoneFramework :=
+  {
+    value := State
+    beq := inferInstance
+    toString := inferInstance
+    leq := State.leq
+    join := State.join
+    bot := fun _ => .bot
+    extremeValue := extremeValue
+    extremeLabel := fun stmt => {stmt.init}
+    flow := Stmt.flow
+    transfer := transfer
+  }
+
+end ConstantPropagation
+
 end ProgramAnalysis.DataFlowAnalysis
