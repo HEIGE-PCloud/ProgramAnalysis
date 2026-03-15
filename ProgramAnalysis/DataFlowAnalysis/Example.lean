@@ -221,7 +221,7 @@ def program : Stmt := [While|
 
 def equations := analysis.equations program
 
-def solution := chaoticIteration analysis program equations
+def solution := MFP analysis program
 
 /--
 info: Analysis◦(1) = [(x, ⊤), (y, ⊤), (z, ⊤)]

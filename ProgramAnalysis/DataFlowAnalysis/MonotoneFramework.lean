@@ -205,4 +205,43 @@ public def println {m : MonotoneFramework} [ToString m.value]
   (solution : Std.TreeMap Equation.Atom m.value) : IO Unit :=
   solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v}")
 
+public def MFP (m : MonotoneFramework) (stmt : Stmt) : Std.TreeMap Equation.Atom m.value := Id.run do
+  let F := m.flow stmt
+  let E := m.extremeLabel stmt
+  let ι := m.extremeValue stmt
+  let f := m.transfer stmt
+  let bot := m.bot stmt
+  let leq := m.leq
+  let join := m.join
+  let labels := E.insertMany (F.flatMap (fun (a, b) => [a, b]))
+  let mut W : List (Label × Label) := []
+  let mut Analysis : Std.TreeMap Label m.value := ∅
+
+  -- Step 1: Initialization
+  for (l, l') in F do
+    W := List.cons (l, l') W
+
+  for l in labels do
+    if l ∈ E
+      then Analysis := Analysis.insert l ι
+      else Analysis := Analysis.insert l bot
+
+  -- Step 2: Interation
+  while h : W ≠ [] do
+    let (l, l')  := W.head h
+    W := W.tail
+    let a1 := f l (Analysis.getD l bot)
+    let a2 := Analysis.getD l' bot
+    if not (leq a1 a2) then
+      Analysis := Analysis.insert l' (join a1 a2)
+      for (l'', l''') in F.filter (fun (x, _) => x == l') do
+        W := List.cons (l'', l''') W
+
+  -- Step 3: Presenting the result
+  let mut result := ∅
+  for l in labels do
+    result := result.insert ⟨l, .e0⟩ (Analysis.getD l bot)
+    result := result.insert ⟨l, .e1⟩ (f l (Analysis.getD l bot))
+  return result
+
 end ProgramAnalysis.DataFlowAnalysis
