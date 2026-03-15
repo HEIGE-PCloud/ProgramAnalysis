@@ -205,7 +205,7 @@ public def println {m : MonotoneFramework} [ToString m.value]
   (solution : Std.TreeMap Equation.Atom m.value) : IO Unit :=
   solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v}")
 
-public def MonotoneFramework.MFP (m : MonotoneFramework) (stmt : Stmt) : Std.TreeMap Equation.Atom m.value := Id.run do
+public def MonotoneFramework.worklistAlgorithm (m : MonotoneFramework) (stmt : Stmt) : Std.TreeMap Equation.Atom m.value := Id.run do
   let F := m.flow stmt
   let E := m.extremeLabel stmt
   let ι := m.extremeValue stmt

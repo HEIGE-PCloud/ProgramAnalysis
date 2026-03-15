@@ -15,7 +15,7 @@ def program : Stmt := [While|
   )
 ]
 
-def solution := analysis.MFP program
+def solution := analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = []
@@ -45,7 +45,7 @@ def program : Stmt := [While|
   )
 ]
 
-def solution := analysis.MFP program
+def solution := analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -75,7 +75,7 @@ def program : Stmt := [While|
     x := a - b
   ]
 
-def solution := analysis.MFP program
+def solution := analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = [(a - b), (b - a)]
@@ -104,7 +104,7 @@ def program : Stmt := [While|
   x := z
 ]
 
-def solution := analysis.MFP program
+def solution := analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = []
@@ -149,7 +149,7 @@ if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
 #guard_msgs in
 #eval program.flow
 
-def solution := ReachingDefinition.analysis.MFP program
+def solution := ReachingDefinition.analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -178,7 +178,7 @@ def program : Stmt := [While|
   x := 2
 ]
 
-def solution := LiveVariable.analysis.MFP program
+def solution := LiveVariable.analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = [x, y]
@@ -203,7 +203,7 @@ def program : Stmt := [While|
   y := x * x
 ]
 
-def solution := analysis.MFP program
+def solution := analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = [(x, ⊤), (y, ⊤), (z, ⊤)]
