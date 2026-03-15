@@ -1,5 +1,7 @@
 module
 public import Mathlib.Data.Finset.Basic
+public import Std.Data.TreeSet
+public import ProgramAnalysis.DataFlowAnalysis.While
 
 namespace ProgramAnalysis.DataFlowAnalysis
 
@@ -62,5 +64,89 @@ public class CompleteLattice (L : Type) extends PartialOrder L where
 
 scoped notation:65 "⨆ " => CompleteLattice.sSup
 scoped notation:65 "⨅ " => CompleteLattice.sInf
+
+
+----------------------------------------
+
+public structure MonotoneFramework where
+  value : Type
+  leq : value → value → Bool
+  join : value → value → value
+  bot : Stmt → value
+  extremeValue : Stmt → value
+  extremeLabel : Stmt → Std.TreeSet Label
+  flow : Stmt → List (Label × Label)
+  transfer : Stmt → Label → value → value
+
+public inductive Equation.AtomType
+  | e0
+  | e1
+deriving DecidableEq, Repr, Ord
+
+public def Equation.AtomType.toString : Equation.AtomType → String
+  | e0 => "◦"
+  | e1 => "•"
+
+public instance : ToString Equation.AtomType := ⟨Equation.AtomType.toString⟩
+
+public structure Equation.Atom where
+  label : Label
+  ty : Equation.AtomType
+deriving DecidableEq, Repr, Ord
+
+public inductive Equation.Expr (value : Type) where
+  | bot : Equation.Expr value
+  | lit : value → Equation.Expr value
+  | atom : Equation.Atom → Equation.Expr value
+  | join : Equation.Expr value → Equation.Expr value → Equation.Expr value
+  | app : (value → value) → Equation.Atom → Equation.Expr value
+
+public structure Equation (value : Type) : Type where
+  lhs : Equation.Atom
+  rhs : Equation.Expr value
+
+public def foldExpr
+  (op : Equation.Expr α → Equation.Expr α → Equation.Expr α)
+  : List (Equation.Expr α) → Equation.Expr α
+  | [] => .bot
+  | x :: [] => x
+  | x :: xs => op x (foldExpr op xs)
+
+public def MonotoneFramework.e0
+  (m : MonotoneFramework) (stmt : Stmt) (l : Label)
+  : Equation m.value :=
+  let E := m.extremeLabel stmt
+  let ι := m.extremeValue stmt
+  let F := m.flow stmt
+  let lhs := ⟨l, .e0⟩
+  let rhs :=
+    if l ∈ E then
+      .lit ι
+    else
+      let as : List (Equation.Expr (m.value)) := F.filterMap (fun (l', ll) =>
+        if l == ll then
+          some (Equation.Expr.atom ⟨l', .e1⟩)
+        else
+          none)
+      foldExpr .join as
+  ⟨lhs, rhs⟩
+
+public def MonotoneFramework.e1
+  (m : MonotoneFramework) (stmt : Stmt) (l : Label)
+  : Equation m.value :=
+  let lhs := ⟨l, .e1⟩
+  let rhs := .app (m.transfer stmt l) ⟨l, .e0⟩
+  ⟨lhs, rhs⟩
+
+public def MonotoneFramework.equations
+  (m : MonotoneFramework) (s : Stmt)
+  : List (Equation m.value) :=
+  s.labels.flatMap (fun l => [m.e0 s l, m.e1 s l])
+
+public def MonotoneFramework.init
+  (m : MonotoneFramework) (s : Stmt) (es : List (Equation m.value))
+  : Std.TreeMap Equation.Atom m.value :=
+  let bot := m.bot s
+  es.foldl (fun acc eq => acc.insert eq.lhs bot) ∅
 
 end ProgramAnalysis.DataFlowAnalysis

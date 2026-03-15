@@ -1,6 +1,6 @@
 module
 
-namespace ProgramAnalysis.DataFlowAnalysis.While
+namespace ProgramAnalysis.DataFlowAnalysis
 
 public abbrev Var := String
 
@@ -295,4 +295,4 @@ public def Stmt.FV : Stmt → List Var
   | .sif b _ s1 s2 => b.FV ++ s1.FV ++ s2.FV
   | .swhile b _ s => b.FV ++ s.FV
 
-end ProgramAnalysis.DataFlowAnalysis.While
+end ProgramAnalysis.DataFlowAnalysis
