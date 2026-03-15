@@ -195,17 +195,17 @@ partial def chaoticIteration'
   if env' == env then env
   else chaoticIteration' m stmt es env'
 
-public def chaoticIteration (m : MonotoneFramework)
+public def MonotoneFramework.chaoticIteration (m : MonotoneFramework)
   (stmt : Stmt)
-  (es : List (Equation m.value))
   : Std.TreeMap Equation.Atom m.value :=
+  let es := m.equations stmt
   chaoticIteration' m stmt es (m.init stmt es)
 
 public def println {m : MonotoneFramework} [ToString m.value]
   (solution : Std.TreeMap Equation.Atom m.value) : IO Unit :=
   solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v}")
 
-public def MFP (m : MonotoneFramework) (stmt : Stmt) : Std.TreeMap Equation.Atom m.value := Id.run do
+public def MonotoneFramework.MFP (m : MonotoneFramework) (stmt : Stmt) : Std.TreeMap Equation.Atom m.value := Id.run do
   let F := m.flow stmt
   let E := m.extremeLabel stmt
   let ι := m.extremeValue stmt

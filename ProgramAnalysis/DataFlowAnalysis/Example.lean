@@ -17,7 +17,7 @@ def program : Stmt := [While|
 
 def equations := analysis.equations program
 
-def solution := chaoticIteration analysis program equations
+def solution := analysis.MFP program
 
 /--
 info: Analysis◦(1) = []
@@ -49,7 +49,7 @@ def program : Stmt := [While|
 
 def equations := analysis.equations program
 
-def solution := chaoticIteration analysis program equations
+def solution := analysis.MFP program
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -81,7 +81,7 @@ def program : Stmt := [While|
 
 def equations := analysis.equations program
 
-def solution := chaoticIteration analysis program equations
+def solution := analysis.MFP program
 
 /--
 info: Analysis◦(1) = [(a - b), (b - a)]
@@ -112,7 +112,7 @@ def program : Stmt := [While|
 
 def equations := analysis.equations program
 
-def solution := chaoticIteration analysis program equations
+def solution := analysis.MFP program
 
 /--
 info: Analysis◦(1) = []
@@ -137,8 +137,6 @@ end LiveVariable
 
 namespace Exam2425Q1
 
-open ReachingDefinition
-
 def program : Stmt := [While|
   x := 0;
   (if x < y
@@ -159,9 +157,7 @@ if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
 #guard_msgs in
 #eval program.flow
 
-def equations := analysis.equations program
-
-def solution := chaoticIteration analysis program equations
+def solution := ReachingDefinition.analysis.MFP program
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -190,11 +186,7 @@ def program : Stmt := [While|
   x := 2
 ]
 
-open LiveVariable
-
-def equations := analysis.equations program
-
-def solution := chaoticIteration analysis program equations
+def solution := LiveVariable.analysis.MFP program
 
 /--
 info: Analysis◦(1) = [x, y]
@@ -219,9 +211,7 @@ def program : Stmt := [While|
   y := x * x
 ]
 
-def equations := analysis.equations program
-
-def solution := MFP analysis program
+def solution := analysis.MFP program
 
 /--
 info: Analysis◦(1) = [(x, ⊤), (y, ⊤), (z, ⊤)]
