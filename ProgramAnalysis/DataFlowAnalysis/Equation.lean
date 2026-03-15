@@ -95,6 +95,8 @@ public def chaoticIteration [Ord α]
   : Std.TreeMap Equation.Atom (Std.TreeSet α) :=
   chaoticIteration' es (init es)
 
+public def println [Ord α] [ToString α] (solution : Std.TreeMap Equation.Atom (Std.TreeSet α)) : IO Unit :=
+  solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v.toList}")
 
 /-!
 ## The MFP Solution

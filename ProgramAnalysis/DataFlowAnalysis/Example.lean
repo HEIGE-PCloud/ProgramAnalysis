@@ -50,8 +50,7 @@ Analysis◦(5) = []
 Analysis•(5) = [(a + b)]
 -/
 #guard_msgs in
-#eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+#eval println solution
 
 end AvailableExpression
 
@@ -98,8 +97,7 @@ Analysis◦(5) = [(x, 1), (x, 5), (y, 4)]
 Analysis•(5) = [(x, 5), (y, 4)]
 -/
 #guard_msgs in
-#eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+#eval println solution
 
 end ReachingDefinition
 
@@ -146,8 +144,7 @@ Analysis◦(5) = []
 Analysis•(5) = [(a - b)]
 -/
 #guard_msgs in
-#eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+#eval println solution
 
 end VeryBusyExpression
 
@@ -201,8 +198,8 @@ Analysis◦(7) = []
 Analysis•(7) = [z]
 -/
 #guard_msgs in
-#eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+#eval println solution
+
 end LiveVariable
 
 namespace Exam2425Q1
@@ -265,9 +262,50 @@ Analysis◦(6) = [(x, 1), (y, ?), (y, 3), (y, 5)]
 Analysis•(6) = [(x, 6), (y, ?), (y, 3), (y, 5)]
 -/
 #guard_msgs in
-#eval solution.toList.forM
-  (fun (k, v) => IO.println s!"{k} = {v.toList}")
+#eval println solution
 
 end Exam2425Q1
+
+namespace Tutorial2Q1
+
+def program : Stmt := [While|
+  x := 1;
+  while y > 0 do (x := x - 1);
+  x := 2
+]
+
+open LiveVariable
+
+def equations := analysis.equations program
+
+/--
+info: Analysis◦(1) = Analysis•(2)
+Analysis•(1) = ((Analysis◦(1) \ {x}) ∪ {})
+Analysis◦(2) = (Analysis•(3) ∪ Analysis•(4))
+Analysis•(2) = ((Analysis◦(2) \ {}) ∪ {y})
+Analysis◦(3) = Analysis•(2)
+Analysis•(3) = ((Analysis◦(3) \ {x}) ∪ {x})
+Analysis◦(4) = {}
+Analysis•(4) = ((Analysis◦(4) \ {x}) ∪ {})
+-/
+#guard_msgs in
+#eval equations.forM IO.println
+
+def solution := chaoticIteration equations (analysis.init program)
+
+/--
+info: Analysis◦(1) = [x, y]
+Analysis•(1) = [y]
+Analysis◦(2) = [x, y]
+Analysis•(2) = [x, y]
+Analysis◦(3) = [x, y]
+Analysis•(3) = [x, y]
+Analysis◦(4) = []
+Analysis•(4) = []
+-/
+#guard_msgs in
+#eval println solution
+
+end Tutorial2Q1
 
 end ProgramAnalysis.DataFlowAnalysis
