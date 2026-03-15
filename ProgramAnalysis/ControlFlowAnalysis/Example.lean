@@ -29,6 +29,12 @@ def expr4 : Expr := [Fun|
    in (g (fn y => (y > 2))))
 ]
 
+-- Tutorial Sheet 3, Exercise 4
+def expr5 : Expr := [Fun|
+  (let f = (fn z => 1) in
+  (((fn x => x x)(fn y => y)) f))
+]
+
 def expr := expr4
 
 /--
