@@ -261,7 +261,7 @@ def transfer (stmt : Stmt) (l : Label) (state : State) :  State :=
   match B with
     | .assign x a _ =>
       match state with
-        | s@(.sigma σ) => .sigma (σ.insert x (ofZTB (eval s a) (by grind [eval_bot])))
+        | s@(.sigma σ) => .sigma (σ.insert x (ofZTB (eval s a) (by grind only [eval_bot])))
         | .bot => .bot
     | _ => state
 
