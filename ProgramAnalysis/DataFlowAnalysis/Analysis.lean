@@ -188,4 +188,21 @@ public def analysis : Analysis :=
 
 end LiveVariable
 
+namespace Test
+
+abbrev Value := Std.TreeSet AExp
+
+def kill (stmt : Stmt) : Block → Value
+  | .assign x _ _ => .ofList (stmt.aexp.filter (fun a' => a'.FV.elem x))
+  | _ => ∅
+
+def gen (_ : Stmt) : Block → Value
+  | .assign x a _ => .ofList (a.aexp.filter (fun a' => !(a'.FV.elem x)))
+  | _ => ∅
+
+def f (stmt : Stmt) (l : Label) (v : Value) : Value :=
+  (v \ kill stmt B) ∪ gen stmt B
+  where B := stmt.block! l
+
+end Test
 end ProgramAnalysis.DataFlowAnalysis
