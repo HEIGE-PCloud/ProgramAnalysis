@@ -70,6 +70,7 @@ scoped notation:65 "⨅ " => CompleteLattice.sInf
 
 public structure MonotoneFramework where
   value : Type
+  h : BEq value
   leq : value → value → Bool
   join : value → value → value
   bot : Stmt → value
@@ -92,7 +93,12 @@ public instance : ToString Equation.AtomType := ⟨Equation.AtomType.toString⟩
 public structure Equation.Atom where
   label : Label
   ty : Equation.AtomType
-deriving DecidableEq, Repr, Ord
+deriving BEq, DecidableEq, Repr, Ord
+
+public def Equation.Atom.toString (e : Equation.Atom) : String :=
+  s!"Analysis{e.ty}({e.label})"
+
+public instance : ToString Equation.Atom := ⟨Equation.Atom.toString⟩
 
 public inductive Equation.Expr (value : Type) where
   | bot : Equation.Expr value
@@ -104,6 +110,22 @@ public inductive Equation.Expr (value : Type) where
 public structure Equation (value : Type) : Type where
   lhs : Equation.Atom
   rhs : Equation.Expr value
+
+def MonotoneFramework.eval
+  (m : MonotoneFramework)
+  (stmt : Stmt)
+  (env : Std.TreeMap Equation.Atom m.value)
+  : Equation.Expr m.value → m.value
+  | .bot => m.bot stmt
+  | .lit v => v
+  | .atom a => env.getD a (m.bot stmt)
+  | .join e1 e2 =>
+    let e1' := m.eval stmt env e1
+    let e2' := m.eval stmt env e2
+    m.join e1' e2'
+  | .app f a =>
+    let a' := env.getD a (m.bot stmt)
+    f a'
 
 public def foldExpr
   (op : Equation.Expr α → Equation.Expr α → Equation.Expr α)
@@ -148,5 +170,35 @@ public def MonotoneFramework.init
   : Std.TreeMap Equation.Atom m.value :=
   let bot := m.bot s
   es.foldl (fun acc eq => acc.insert eq.lhs bot) ∅
+
+
+def chaoticIterationOnce
+  (m : MonotoneFramework)
+  (stmt : Stmt)
+  (env : Std.TreeMap Equation.Atom m.value)
+  (es : List (Equation m.value))
+  : Std.TreeMap Equation.Atom m.value :=
+  es.foldl (fun acc eq => acc.insert eq.lhs (m.eval stmt env eq.rhs)) env
+
+-- TODO: Prove termination?
+partial def chaoticIteration'
+  (m : MonotoneFramework)
+  (stmt : Stmt)
+  (es : List (Equation m.value))
+  (env : Std.TreeMap Equation.Atom m.value) :=
+  let env' := chaoticIterationOnce m stmt env es
+  have _ : BEq m.value := m.h
+  if env' == env then env
+  else chaoticIteration' m stmt es env'
+
+public def chaoticIteration (m : MonotoneFramework)
+  (stmt : Stmt)
+  (es : List (Equation m.value))
+  : Std.TreeMap Equation.Atom m.value :=
+  chaoticIteration' m stmt es (m.init stmt es)
+
+public def println (m : MonotoneFramework) [ToString m.value]
+  (solution : Std.TreeMap Equation.Atom m.value) : IO Unit :=
+  solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v}")
 
 end ProgramAnalysis.DataFlowAnalysis
