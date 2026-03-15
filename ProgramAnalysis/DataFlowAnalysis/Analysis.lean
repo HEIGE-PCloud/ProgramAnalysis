@@ -245,6 +245,7 @@ lemma ZTB_eval_ne_bot {op : Op_a} {v₁ v₂ : ZTB}
     (h₁ : v₁ ≠ ZTB.bot) (h₂ : v₂ ≠ ZTB.bot) : ZTB.eval op v₁ v₂ ≠ ZTB.bot := by
   grind [ZTB, ZTB.eval, Op_a]
 
+@[grind .]
 lemma eval_sigma_ne_bot (env : Std.TreeMap Var ZT) (a : ArithAtom):
     eval (.sigma env) a ≠ ZTB.bot := by
   induction a <;> grind only [eval, ofZT_ne_bot, ZTB_eval_ne_bot]
@@ -252,17 +253,8 @@ lemma eval_sigma_ne_bot (env : Std.TreeMap Var ZT) (a : ArithAtom):
 theorem eval_bot (σ : State) (a : ArithAtom) :
     eval σ a = ZTB.bot ↔ σ = State.bot := by
   constructor
-  · intro h
-    cases σ with
-    | bot => rfl
-    | sigma env => exact absurd h (eval_sigma_ne_bot env a)
-  · rintro rfl
-    induction a with
-    | var x => simp [eval]
-    | const n => simp [eval]
-    | op op a₁ a₂ ih₁ ih₂ =>
-      simp only [eval, ih₁, ih₂]
-      cases op <;> rfl
+  · grind [State]
+  · induction a <;> grind only [eval, ZTB.eval]
 
 def transfer (stmt : Stmt) (l : Label) (state : State) :  State :=
   let B := stmt.block! l
