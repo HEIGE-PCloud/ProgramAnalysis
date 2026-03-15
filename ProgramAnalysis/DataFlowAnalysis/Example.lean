@@ -211,4 +211,33 @@ Analysis•(4) = []
 
 end Tutorial2Q1
 
+namespace ConstantPropagation
+
+def program : Stmt := [While|
+  y := 2;
+  (if z > 1 then x := 1 else x := -1);
+  y := x * x
+]
+
+def equations := analysis.equations program
+
+def solution := chaoticIteration analysis program equations
+
+/--
+info: Analysis◦(1) = [(x, ⊤), (y, ⊤), (z, ⊤)]
+Analysis•(1) = [(x, ⊤), (y, 2), (z, ⊤)]
+Analysis◦(2) = [(x, ⊤), (y, 2), (z, ⊤)]
+Analysis•(2) = [(x, ⊤), (y, 2), (z, ⊤)]
+Analysis◦(3) = [(x, ⊤), (y, 2), (z, ⊤)]
+Analysis•(3) = [(x, 1), (y, 2), (z, ⊤)]
+Analysis◦(4) = [(x, ⊤), (y, 2), (z, ⊤)]
+Analysis•(4) = [(x, -1), (y, 2), (z, ⊤)]
+Analysis◦(5) = [(x, ⊤), (y, 2), (z, ⊤)]
+Analysis•(5) = [(x, ⊤), (y, ⊤), (z, ⊤)]
+-/
+#guard_msgs in
+#eval println solution
+
+end ConstantPropagation
+
 end ProgramAnalysis.DataFlowAnalysis
