@@ -24,7 +24,6 @@ namespace AvailableExpression
 
 public abbrev Value := Std.TreeSet AExp
 
-
 def kill (stmt : Stmt) : Block → Value
   | .assign x _ _ => .ofList (stmt.aexp.filter (fun a' => a'.FV.elem x))
   | _ => ∅
@@ -237,26 +236,18 @@ def eval : State → ArithAtom → ZTB
   | .sigma _, .const n => .z n
   | σ, .op op a₁ a₂ => ZTB.eval op (eval σ a₁) (eval σ a₂)
 
+@[grind .]
 lemma ofZT_ne_bot (z : ZT) : ofZT z ≠ ZTB.bot := by
-  cases z <;> simp [ofZT]
+  grind [ofZT, ZT]
 
+@[grind .]
 lemma ZTB_eval_ne_bot {op : Op_a} {v₁ v₂ : ZTB}
     (h₁ : v₁ ≠ ZTB.bot) (h₂ : v₂ ≠ ZTB.bot) : ZTB.eval op v₁ v₂ ≠ ZTB.bot := by
-  rcases v₁ with _ | _ | v₁
-  · simp [ZTB.eval]
-  · exact absurd rfl h₁
-  · rcases v₂ with _ | _ | v₂
-    · simp [ZTB.eval]
-    · exact absurd rfl h₂
-    · cases op <;> simp [ZTB.eval]
+  grind [ZTB, ZTB.eval, Op_a]
 
-lemma eval_sigma_ne_bot (env : Std.TreeMap Var ZT) :
-    ∀ a : ArithAtom, eval (.sigma env) a ≠ ZTB.bot
-  | .var x   => ofZT_ne_bot _
-  | .const _ => by simp [eval]
-  | .op op a₁ a₂ => by
-      simp only [eval]
-      exact ZTB_eval_ne_bot (eval_sigma_ne_bot env a₁) (eval_sigma_ne_bot env a₂)
+lemma eval_sigma_ne_bot (env : Std.TreeMap Var ZT) (a : ArithAtom):
+    eval (.sigma env) a ≠ ZTB.bot := by
+  induction a <;> grind only [eval, ofZT_ne_bot, ZTB_eval_ne_bot]
 
 theorem eval_bot (σ : State) (a : ArithAtom) :
     eval σ a = ZTB.bot ↔ σ = State.bot := by
