@@ -33,18 +33,18 @@ if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
 def RDsolution := ReachingDefinition.analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = [(x, ?), (y, ?)]
-Analysis•(1) = [(x, 1), (y, ?)]
-Analysis◦(2) = [(x, 1), (y, ?)]
-Analysis•(2) = [(x, 1), (y, ?)]
-Analysis◦(3) = [(x, 1), (y, ?)]
-Analysis•(3) = [(x, 1), (y, 3)]
-Analysis◦(4) = [(x, 1), (y, ?), (y, 5)]
-Analysis•(4) = [(x, 1), (y, ?), (y, 5)]
-Analysis◦(5) = [(x, 1), (y, ?), (y, 5)]
-Analysis•(5) = [(x, 1), (y, 5)]
-Analysis◦(6) = [(x, 1), (y, ?), (y, 3), (y, 5)]
-Analysis•(6) = [(x, 6), (y, ?), (y, 3), (y, 5)]
+info: RD◦(1) = [(x, ?), (y, ?)]
+RD•(1) = [(x, 1), (y, ?)]
+RD◦(2) = [(x, 1), (y, ?)]
+RD•(2) = [(x, 1), (y, ?)]
+RD◦(3) = [(x, 1), (y, ?)]
+RD•(3) = [(x, 1), (y, 3)]
+RD◦(4) = [(x, 1), (y, ?), (y, 5)]
+RD•(4) = [(x, 1), (y, ?), (y, 5)]
+RD◦(5) = [(x, 1), (y, ?), (y, 5)]
+RD•(5) = [(x, 1), (y, 5)]
+RD◦(6) = [(x, 1), (y, ?), (y, 3), (y, 5)]
+RD•(6) = [(x, 6), (y, ?), (y, 3), (y, 5)]
 -/
 #guard_msgs in
 #eval println RDsolution
@@ -52,18 +52,18 @@ Analysis•(6) = [(x, 6), (y, ?), (y, 3), (y, 5)]
 def CPsolution := ConstantPropagation.analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = [(x, ⊤), (y, ⊤)]
-Analysis•(1) = [(x, 0), (y, ⊤)]
-Analysis◦(2) = [(x, 0), (y, ⊤)]
-Analysis•(2) = [(x, 0), (y, ⊤)]
-Analysis◦(3) = [(x, 0), (y, ⊤)]
-Analysis•(3) = [(x, 0), (y, 0)]
-Analysis◦(4) = [(x, 0), (y, ⊤)]
-Analysis•(4) = [(x, 0), (y, ⊤)]
-Analysis◦(5) = [(x, 0), (y, ⊤)]
-Analysis•(5) = [(x, 0), (y, 0)]
-Analysis◦(6) = [(x, 0), (y, ⊤)]
-Analysis•(6) = [(x, ⊤), (y, ⊤)]
+info: CP◦(1) = [(x, ⊤), (y, ⊤)]
+CP•(1) = [(x, 0), (y, ⊤)]
+CP◦(2) = [(x, 0), (y, ⊤)]
+CP•(2) = [(x, 0), (y, ⊤)]
+CP◦(3) = [(x, 0), (y, ⊤)]
+CP•(3) = [(x, 0), (y, 0)]
+CP◦(4) = [(x, 0), (y, ⊤)]
+CP•(4) = [(x, 0), (y, ⊤)]
+CP◦(5) = [(x, 0), (y, ⊤)]
+CP•(5) = [(x, 0), (y, 0)]
+CP◦(6) = [(x, 0), (y, ⊤)]
+CP•(6) = [(x, ⊤), (y, ⊤)]
 -/
 #guard_msgs in
 #eval println CPsolution

@@ -18,16 +18,16 @@ def program : Stmt := [While|
 def solution := analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = []
-Analysis•(1) = [(a + b)]
-Analysis◦(2) = [(a + b)]
-Analysis•(2) = [(a + b), (a * b)]
-Analysis◦(3) = [(a + b)]
-Analysis•(3) = [(a + b)]
-Analysis◦(4) = [(a + b)]
-Analysis•(4) = []
-Analysis◦(5) = []
-Analysis•(5) = [(a + b)]
+info: AE◦(1) = []
+AE•(1) = [(a + b)]
+AE◦(2) = [(a + b)]
+AE•(2) = [(a + b), (a * b)]
+AE◦(3) = [(a + b)]
+AE•(3) = [(a + b)]
+AE◦(4) = [(a + b)]
+AE•(4) = []
+AE◦(5) = []
+AE•(5) = [(a + b)]
 -/
 #guard_msgs in
 #eval println solution
@@ -48,16 +48,16 @@ def program : Stmt := [While|
 def solution := analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = [(x, ?), (y, ?)]
-Analysis•(1) = [(x, 1), (y, ?)]
-Analysis◦(2) = [(x, 1), (y, ?)]
-Analysis•(2) = [(x, 1), (y, 2)]
-Analysis◦(3) = [(x, 1), (x, 5), (y, 2), (y, 4)]
-Analysis•(3) = [(x, 1), (x, 5), (y, 2), (y, 4)]
-Analysis◦(4) = [(x, 1), (x, 5), (y, 2), (y, 4)]
-Analysis•(4) = [(x, 1), (x, 5), (y, 4)]
-Analysis◦(5) = [(x, 1), (x, 5), (y, 4)]
-Analysis•(5) = [(x, 5), (y, 4)]
+info: RD◦(1) = [(x, ?), (y, ?)]
+RD•(1) = [(x, 1), (y, ?)]
+RD◦(2) = [(x, 1), (y, ?)]
+RD•(2) = [(x, 1), (y, 2)]
+RD◦(3) = [(x, 1), (x, 5), (y, 2), (y, 4)]
+RD•(3) = [(x, 1), (x, 5), (y, 2), (y, 4)]
+RD◦(4) = [(x, 1), (x, 5), (y, 2), (y, 4)]
+RD•(4) = [(x, 1), (x, 5), (y, 4)]
+RD◦(5) = [(x, 1), (x, 5), (y, 4)]
+RD•(5) = [(x, 5), (y, 4)]
 -/
 #guard_msgs in
 #eval println solution
@@ -78,16 +78,16 @@ def program : Stmt := [While|
 def solution := analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = [(a - b), (b - a)]
-Analysis•(1) = [(a - b), (b - a)]
-Analysis◦(2) = [(a - b)]
-Analysis•(2) = [(a - b), (b - a)]
-Analysis◦(3) = []
-Analysis•(3) = [(a - b)]
-Analysis◦(4) = [(a - b)]
-Analysis•(4) = [(a - b), (b - a)]
-Analysis◦(5) = []
-Analysis•(5) = [(a - b)]
+info: VB◦(1) = [(a - b), (b - a)]
+VB•(1) = [(a - b), (b - a)]
+VB◦(2) = [(a - b)]
+VB•(2) = [(a - b), (b - a)]
+VB◦(3) = []
+VB•(3) = [(a - b)]
+VB◦(4) = [(a - b)]
+VB•(4) = [(a - b), (b - a)]
+VB◦(5) = []
+VB•(5) = [(a - b)]
 -/
 #guard_msgs in
 #eval println solution
@@ -107,20 +107,20 @@ def program : Stmt := [While|
 def solution := analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = []
-Analysis•(1) = []
-Analysis◦(2) = [y]
-Analysis•(2) = []
-Analysis◦(3) = [x, y]
-Analysis•(3) = [y]
-Analysis◦(4) = [y]
-Analysis•(4) = [x, y]
-Analysis◦(5) = [z]
-Analysis•(5) = [y]
-Analysis◦(6) = [z]
-Analysis•(6) = [y]
-Analysis◦(7) = []
-Analysis•(7) = [z]
+info: LV◦(1) = []
+LV•(1) = []
+LV◦(2) = [y]
+LV•(2) = []
+LV◦(3) = [x, y]
+LV•(3) = [y]
+LV◦(4) = [y]
+LV•(4) = [x, y]
+LV◦(5) = [z]
+LV•(5) = [y]
+LV◦(6) = [z]
+LV•(6) = [y]
+LV◦(7) = []
+LV•(7) = [z]
 -/
 #guard_msgs in
 #eval println solution
@@ -139,14 +139,14 @@ def program : Stmt := [While|
 def solution := LiveVariable.analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = [x, y]
-Analysis•(1) = [y]
-Analysis◦(2) = [x, y]
-Analysis•(2) = [x, y]
-Analysis◦(3) = [x, y]
-Analysis•(3) = [x, y]
-Analysis◦(4) = []
-Analysis•(4) = []
+info: LV◦(1) = [x, y]
+LV•(1) = [y]
+LV◦(2) = [x, y]
+LV•(2) = [x, y]
+LV◦(3) = [x, y]
+LV•(3) = [x, y]
+LV◦(4) = []
+LV•(4) = []
 -/
 #guard_msgs in
 #eval println solution
@@ -164,16 +164,16 @@ def program : Stmt := [While|
 def solution := analysis.worklistAlgorithm program
 
 /--
-info: Analysis◦(1) = [(x, ⊤), (y, ⊤), (z, ⊤)]
-Analysis•(1) = [(x, ⊤), (y, 2), (z, ⊤)]
-Analysis◦(2) = [(x, ⊤), (y, 2), (z, ⊤)]
-Analysis•(2) = [(x, ⊤), (y, 2), (z, ⊤)]
-Analysis◦(3) = [(x, ⊤), (y, 2), (z, ⊤)]
-Analysis•(3) = [(x, 1), (y, 2), (z, ⊤)]
-Analysis◦(4) = [(x, ⊤), (y, 2), (z, ⊤)]
-Analysis•(4) = [(x, -1), (y, 2), (z, ⊤)]
-Analysis◦(5) = [(x, ⊤), (y, 2), (z, ⊤)]
-Analysis•(5) = [(x, ⊤), (y, ⊤), (z, ⊤)]
+info: CP◦(1) = [(x, ⊤), (y, ⊤), (z, ⊤)]
+CP•(1) = [(x, ⊤), (y, 2), (z, ⊤)]
+CP◦(2) = [(x, ⊤), (y, 2), (z, ⊤)]
+CP•(2) = [(x, ⊤), (y, 2), (z, ⊤)]
+CP◦(3) = [(x, ⊤), (y, 2), (z, ⊤)]
+CP•(3) = [(x, 1), (y, 2), (z, ⊤)]
+CP◦(4) = [(x, ⊤), (y, 2), (z, ⊤)]
+CP•(4) = [(x, -1), (y, 2), (z, ⊤)]
+CP◦(5) = [(x, ⊤), (y, 2), (z, ⊤)]
+CP•(5) = [(x, ⊤), (y, ⊤), (z, ⊤)]
 -/
 #guard_msgs in
 #eval println solution

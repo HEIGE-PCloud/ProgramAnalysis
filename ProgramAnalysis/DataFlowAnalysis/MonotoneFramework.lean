@@ -69,6 +69,7 @@ scoped notation:65 "⨅ " => CompleteLattice.sInf
 ----------------------------------------
 
 public structure MonotoneFramework where
+  name : String := "Analysis"
   value : Type
   beq : BEq value
   toString : ToString value
@@ -101,7 +102,7 @@ public structure Equation.Atom where
 deriving BEq, DecidableEq, Repr, Ord
 
 public def Equation.Atom.toString (e : Equation.Atom) : String :=
-  s!"Analysis{e.ty}({e.label})"
+  s!"{e.ty}({e.label})"
 
 public instance : ToString Equation.Atom := ⟨Equation.Atom.toString⟩
 
@@ -203,7 +204,7 @@ public def MonotoneFramework.chaoticIteration (m : MonotoneFramework)
 
 public def println {m : MonotoneFramework} [ToString m.value]
   (solution : Std.TreeMap Equation.Atom m.value) : IO Unit :=
-  solution.toList.forM (fun (k, v) => IO.println s!"{k} = {v}")
+  solution.toList.forM (fun (k, v) => IO.println s!"{m.name}{k} = {v}")
 
 public def MonotoneFramework.worklistAlgorithm (m : MonotoneFramework) (stmt : Stmt) : Std.TreeMap Equation.Atom m.value := Id.run do
   let F := m.flow stmt

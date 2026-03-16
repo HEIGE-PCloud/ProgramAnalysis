@@ -33,6 +33,7 @@ def gen (_ : Stmt) : Block → Value
   | _ => ∅
 
 public def analysis : MonotoneFramework := {
+  name := "AE"
   value := Value
   beq := inferInstance
   toString := inferInstance
@@ -85,6 +86,7 @@ def extremeValue (stmt : Stmt) : Value :=
 
 public def analysis : MonotoneFramework :=
   {
+    name := "RD"
     value := Value
     beq := inferInstance
     toString := inferInstance
@@ -114,6 +116,7 @@ def gen (_ : Stmt) : Block → Value
 
 public def analysis : MonotoneFramework :=
   {
+    name := "VB"
     value := Value
     beq := inferInstance
     toString := inferInstance
@@ -143,6 +146,7 @@ def gen (_ : Stmt) : Block → Value
 
 public def analysis : MonotoneFramework :=
  {
+    name := "LV"
     value := Value
     beq := inferInstance
     toString := inferInstance
@@ -267,6 +271,7 @@ def transfer (stmt : Stmt) (l : Label) (state : State) :  State :=
 
 public def analysis : MonotoneFramework :=
   {
+    name := "CP"
     value := State
     beq := inferInstance
     toString := inferInstance
