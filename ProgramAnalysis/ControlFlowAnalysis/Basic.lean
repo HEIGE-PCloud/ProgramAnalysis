@@ -3,21 +3,6 @@ module
 public import Std.Data.TreeSet
 public import Std.Data.TreeMap
 
-public def Char.toSuperScript : Char → Char
-  | '0' => '⁰'
-  | '1' => '¹'
-  | '2' => '²'
-  | '3' => '³'
-  | '4' => '⁴'
-  | '5' => '⁵'
-  | '6' => '⁶'
-  | '7' => '⁷'
-  | '8' => '⁸'
-  | '9' => '⁹'
-  | c => c
-
-public def Nat.toSuperscript (n : Nat) : String := (toString n).map Char.toSuperScript
-
 public def Std.TreeSet.subset (s1 s2 : Std.TreeSet α cmp) : Bool :=
   s1.all s2.contains
 

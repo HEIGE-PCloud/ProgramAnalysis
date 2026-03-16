@@ -98,6 +98,8 @@ public def Expr.constraints : Expr → ReaderM (List FnTerm) (Set Constraint)
         .ofList (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t2.label) (.env t.var))) ∪
         .ofList (fns.map (fun t => Constraint.conditional t (.cache t1.label) (.cache t.body.label) (.cache label)))
 
+public def Expr.constraints' : Expr → (Set Constraint) := fun expr => expr.constraints.run (expr.allFns)
+
 public abbrev Constraint.Node := ConcreteDomain
 
 public def Constraint.nodes : Constraint → List Node

@@ -78,7 +78,7 @@ public def Term.toString : Term → String
   | .letin x e1 e2 => s!"(let {x} = {e1.toString} in {e2.toString})"
 
 public def Expr.toString : Expr → String
-  | .e t l => s!"{t.toString}{l.toSuperscript}"
+  | .e t l => s!"{t.toString}{l.toSuperscriptString}"
 end
 end
 
