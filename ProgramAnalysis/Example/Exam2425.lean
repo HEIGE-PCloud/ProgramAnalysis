@@ -86,6 +86,36 @@ def expr : Expr := [Fun|
 #guard_msgs in
 #eval IO.println expr
 
+/-- info: (some 2) -/
+#guard_msgs in
+#eval IO.println (expr.eval .empty)
+
+def constraints := expr.constraints.run expr.allFns
+/--
+info: [C(5) ⊆ C(8), C(7) ⊆ C(8), C(8) ⊆ r(f), C(11) ⊆ C(12), r(f) ⊆ C(9), r(x) ⊆ C(4), r(y) ⊆ C(6), fn x => x⁴ ⊆ C(5), fn y => y⁶ ⊆ C(7), fn x => x⁴ ⊆ C(9) => C(4) ⊆ C(11), fn x => x⁴ ⊆ C(9) => C(10) ⊆ r(x), fn y => y⁶ ⊆ C(9) => C(6) ⊆ C(11), fn y => y⁶ ⊆ C(9) => C(10) ⊆ r(y)]
+-/
+#guard_msgs in
+#eval IO.println constraints
+
+def solution := Constraint.solve constraints.toList
+
+/--
+info: C(4) ↦ []
+C(5) ↦ [fn x => x⁴]
+C(6) ↦ []
+C(7) ↦ [fn y => y⁶]
+C(8) ↦ [fn x => x⁴, fn y => y⁶]
+C(9) ↦ [fn x => x⁴, fn y => y⁶]
+C(10) ↦ []
+C(11) ↦ []
+C(12) ↦ []
+r(f) ↦ [fn x => x⁴, fn y => y⁶]
+r(x) ↦ []
+r(y) ↦ []
+-/
+#guard_msgs in
+#eval solution.toList.forM (fun (node, value) => IO.println s!"{node} ↦ {value.toList.map (fun t: FnTerm => t)}")
+
 end Question2
 
 end ProgramAnalysis.Example
