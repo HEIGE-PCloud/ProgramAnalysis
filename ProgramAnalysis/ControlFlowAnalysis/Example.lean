@@ -3,9 +3,8 @@ module
 public import ProgramAnalysis.ControlFlowAnalysis
 meta import ProgramAnalysis.ControlFlowAnalysis.Meta
 
-namespace ProgramAnalysis.ControlFlowAnalysis.Example
+namespace ProgramAnalysis.ControlFlowAnalysis
 
-open ProgramAnalysis.ControlFlowAnalysis Fun
 
 -- Example in lecture
 def expr1 : Expr := [Fun|(fn x => x)(fn y => y)]
@@ -94,4 +93,4 @@ r(y) ↦ []
 #guard_msgs in
 #eval example.solution.toList.forM (fun (node, value) => IO.println s!"{node} ↦ {value.toList.map (fun t: FnTerm => t)}")
 
-end ProgramAnalysis.ControlFlowAnalysis.Example
+end ProgramAnalysis.ControlFlowAnalysis

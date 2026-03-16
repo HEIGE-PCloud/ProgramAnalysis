@@ -6,8 +6,6 @@ public import Std.Data.TreeMap
 
 namespace ProgramAnalysis.ControlFlowAnalysis
 
-open ProgramAnalysis.ControlFlowAnalysis.Fun
-
 public inductive ConcreteDomain
   | cache : Label → ConcreteDomain
   | env : Var → ConcreteDomain
@@ -58,7 +56,7 @@ public def Constraint.toString : Constraint → String
 public instance : ToString Constraint where
   toString := Constraint.toString
 
-public def Fun.Expr.allFns : Expr → List FnTerm
+public def Expr.allFns : Expr → List FnTerm
 | .e term _ => match term with
   | .c _ => []
   | .x _ => []
@@ -68,7 +66,7 @@ public def Fun.Expr.allFns : Expr → List FnTerm
   | .op _ t1 t2 => allFns t1 ++ allFns t2
   | .letin _ t1 t2 => allFns t1 ++ allFns t2
 
-public def Fun.Expr.constraints : Expr → ReaderM (List FnTerm) (Set Constraint)
+public def Expr.constraints : Expr → ReaderM (List FnTerm) (Set Constraint)
   | .e term label => match term with
     | .c _ => pure ∅
     | .x x => pure {(.subset (.env x) (.cache label))}

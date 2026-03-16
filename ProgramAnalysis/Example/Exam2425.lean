@@ -70,4 +70,22 @@ Analysis•(6) = [(x, ⊤), (y, ⊤)]
 
 end Question1
 
+section Question2
+
+open ControlFlowAnalysis
+def expr : Expr := [Fun|
+  let f = (
+    if 1 > 0
+      then (fn x => x)
+      else (fn y => y)
+  )
+  in f 2
+]
+
+/-- info: (let f = (if (1¹ > 0²)³ then (fn x => x⁴)⁵ else (fn y => y⁶)⁷)⁸ in (f⁹ 2¹⁰)¹¹)¹² -/
+#guard_msgs in
+#eval IO.println expr
+
+end Question2
+
 end ProgramAnalysis.Example

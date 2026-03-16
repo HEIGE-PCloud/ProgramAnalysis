@@ -18,7 +18,7 @@ e ::= tˡ
 t ::= C | x | fn x => e₀ | e₁ e₂ | if e₁ then e₂ else e₃ | e₁ op e₂ | let x = e₁ in e₂
 -/
 
-namespace ProgramAnalysis.ControlFlowAnalysis.Fun
+namespace ProgramAnalysis.ControlFlowAnalysis
 
 public inductive Op
   | plus
@@ -229,4 +229,4 @@ public partial def Expr.eval (ρ : Env) (e : Expr) : Option Value :=
 example : Option Value := (Expr.build <|
   Expr.mkApp (Expr.mkFn "x" (Expr.mkVar "x")) (Expr.mkFn "y" (Expr.mkVar "y"))).eval ⟨[]⟩
 
-end ProgramAnalysis.ControlFlowAnalysis.Fun
+end ProgramAnalysis.ControlFlowAnalysis

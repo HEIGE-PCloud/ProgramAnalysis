@@ -4,9 +4,9 @@ public import Lean
 public import ProgramAnalysis.ControlFlowAnalysis.Fun
 
 public section
-namespace ProgramAnalysis.ControlFlowAnalysis.Fun.Meta
+namespace ProgramAnalysis.ControlFlowAnalysis
 
-open Lean Elab Meta ProgramAnalysis.ControlFlowAnalysis.Fun
+open Lean Elab Meta ProgramAnalysis.ControlFlowAnalysis
 
 declare_syntax_cat fun_op
 syntax "+" : fun_op
@@ -83,5 +83,5 @@ info: Expr.build (Expr.mkApp (Expr.mkFn "x" (Expr.mkVar "x")) (Expr.mkFn "y" (Ex
 #guard_msgs in
 #reduce [Fun|(fn x => x)(fn y => y)]
 
-end ProgramAnalysis.ControlFlowAnalysis.Fun.Meta
+end ProgramAnalysis.ControlFlowAnalysis
 end
