@@ -149,7 +149,7 @@ if [(x < y)]² then ([y := x]³) else (while [(y < 0)]⁴ do ([y := x]⁵));
 #guard_msgs in
 #eval program.flow
 
-def solution := ReachingDefinition.analysis.worklistAlgorithm program
+def RDsolution := ReachingDefinition.analysis.worklistAlgorithm program
 
 /--
 info: Analysis◦(1) = [(x, ?), (y, ?)]
@@ -166,7 +166,26 @@ Analysis◦(6) = [(x, 1), (y, ?), (y, 3), (y, 5)]
 Analysis•(6) = [(x, 6), (y, ?), (y, 3), (y, 5)]
 -/
 #guard_msgs in
-#eval println solution
+#eval println RDsolution
+
+def CPsolution := ConstantPropagation.analysis.worklistAlgorithm program
+
+/--
+info: Analysis◦(1) = [(x, ⊤), (y, ⊤)]
+Analysis•(1) = [(x, 0), (y, ⊤)]
+Analysis◦(2) = [(x, 0), (y, ⊤)]
+Analysis•(2) = [(x, 0), (y, ⊤)]
+Analysis◦(3) = [(x, 0), (y, ⊤)]
+Analysis•(3) = [(x, 0), (y, 0)]
+Analysis◦(4) = [(x, 0), (y, ⊤)]
+Analysis•(4) = [(x, 0), (y, ⊤)]
+Analysis◦(5) = [(x, 0), (y, ⊤)]
+Analysis•(5) = [(x, 0), (y, 0)]
+Analysis◦(6) = [(x, 0), (y, ⊤)]
+Analysis•(6) = [(x, ⊤), (y, ⊤)]
+-/
+#guard_msgs in
+#eval println CPsolution
 
 end Exam2425Q1
 
