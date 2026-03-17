@@ -1,3 +1,4 @@
 module
 
 public import ProgramAnalysis.ProbabilisticPrograms.PWhile
+public import ProgramAnalysis.ProbabilisticPrograms.SOS
