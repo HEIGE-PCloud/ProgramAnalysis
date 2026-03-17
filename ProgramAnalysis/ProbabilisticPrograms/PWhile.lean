@@ -54,7 +54,7 @@ public instance : ToString Op_r := ⟨Op_r.toString⟩
 
 public inductive ArithAtom
   | var : Var → ArithAtom
-  | const : Nat → ArithAtom
+  | const : Int → ArithAtom
   | op : Op_a → ArithAtom → ArithAtom → ArithAtom
 deriving Repr, Ord, DecidableEq
 
@@ -99,10 +99,10 @@ public def Stmt.toString : Stmt → String
   | .skip l => s!"[skip]{l.toSuperscriptString}"
   | .assign var arith l => s!"[{var} := {arith}]{l.toSuperscriptString}"
   | .assign? var ariths l => s!"[{var} ?= {ariths}]{l.toSuperscriptString}"
-  | .seq s1 s2 => s!"{s1.toString}\n{s2.toString}"
+  | .seq s1 s2 => s!"{s1.toString};\n{s2.toString}"
   | .choose l p1 s1 p2 s2 => s!"[choose]{l.toSuperscriptString} {p1}:{s1.toString} or {p2}:{s2.toString} ro"
   | .sif b l s1 s2 => s!"if [{b}]{l.toSuperscriptString} then {s1.toString} else {s2.toString} fi"
-  | .swhile b l s => s!"while [{b}]{l.toSuperscriptString} do {s.toString} od"
+  | .swhile b l s => s!"while [{b}]{l.toSuperscriptString} do\n{s.toString}\nod"
 
 public instance : ToString Stmt := ⟨Stmt.toString⟩
 
@@ -181,7 +181,7 @@ scoped syntax ident "?=" "{" pwhile_arith_atom,+ "}" : pwhile_stmt
 scoped syntax pwhile_stmt ";" pwhile_stmt : pwhile_stmt
 scoped syntax "choose" num ":" pwhile_stmt "or" num ":" pwhile_stmt "ro": pwhile_stmt
 scoped syntax "if" pwhile_bool_atom "then" pwhile_stmt "else" pwhile_stmt "fi" : pwhile_stmt
-scoped syntax "while" pwhile_bool_atom "do" "(" pwhile_stmt ")" "od" : pwhile_stmt
+scoped syntax "while" pwhile_bool_atom "do" pwhile_stmt "od" : pwhile_stmt
 scoped syntax "(" pwhile_stmt ")" : pwhile_stmt
 
 meta def elabOpa : Syntax → MetaM Expr
@@ -252,12 +252,16 @@ meta partial def elabStmt : Syntax → MetaM Expr
     let s1Expr ← elabStmt s1
     let s2Expr ← elabStmt s2
     mkAppM ``Stmt.mkSeq #[s1Expr, s2Expr]
+  | `(pwhile_stmt| choose $p1:num : $s1:pwhile_stmt or $p2:num : $s2:pwhile_stmt ro) => do
+    let s1 ← elabStmt s1
+    let s2 ← elabStmt s2
+    mkAppM ``Stmt.mkChoose #[mkNatLit p1.getNat, s1, mkNatLit p2.getNat, s2]
   | `(pwhile_stmt| if $b:pwhile_bool_atom then $s1:pwhile_stmt else $s2:pwhile_stmt fi) => do
     let bExpr ← elabBoolAtom b
     let s1Expr ← elabStmt s1
     let s2Expr ← elabStmt s2
     mkAppM ``Stmt.mkIf #[bExpr, s1Expr, s2Expr]
-  | `(pwhile_stmt| while $b:pwhile_bool_atom do ($s:pwhile_stmt) od) => do
+  | `(pwhile_stmt| while $b:pwhile_bool_atom do $s:pwhile_stmt od) => do
     let bExpr ← elabBoolAtom b
     let sExpr ← elabStmt s
     mkAppM ``Stmt.mkWhile #[bExpr, sExpr]
@@ -270,5 +274,33 @@ meta def elabPWhile (stx : Syntax) : MetaM Expr := do
   return expr
 
 elab "[pWhile|" p:pwhile_stmt "]" : term => elabPWhile p
+
+def example1 : Stmt := [pWhile|
+  x := 0;
+  if true then
+    skip
+  else
+    skip
+  fi;
+  while x < 4 do
+    y ?= {0, 1, 2};
+    choose 1 : skip or 1 : stop ro;
+    x := (x + y)
+  od;
+  stop
+]
+
+/--
+info: [x := 0]¹;
+if [true]² then [skip]³ else [skip]⁴ fi;
+while [(x < 4)]⁵ do
+[y ?= [0, 1, 2]]⁶;
+[choose]⁷ 1:[skip]⁸ or 1:[skip]⁹ ro;
+[x := (x + y)]¹⁰
+od;
+[skip]¹¹
+-/
+#guard_msgs in
+#eval IO.println example1.toString
 
 end ProgramAnalysis.ProbabilisticPrograms
