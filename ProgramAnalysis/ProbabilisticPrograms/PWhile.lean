@@ -177,7 +177,7 @@ declare_syntax_cat pwhile_stmt
 scoped syntax "stop" : pwhile_stmt
 scoped syntax "skip" : pwhile_stmt
 scoped syntax ident ":=" pwhile_arith_atom : pwhile_stmt
-scoped syntax ident "?=" pwhile_arith_atom : pwhile_stmt
+scoped syntax ident "?=" "{" pwhile_arith_atom,+ "}" : pwhile_stmt
 scoped syntax pwhile_stmt ";" pwhile_stmt : pwhile_stmt
 scoped syntax "choose" num ":" pwhile_stmt "or" num ":" pwhile_stmt "ro": pwhile_stmt
 scoped syntax "if" pwhile_bool_atom "then" pwhile_stmt "else" pwhile_stmt "fi" : pwhile_stmt
@@ -244,9 +244,10 @@ meta partial def elabStmt : Syntax → MetaM Expr
   | `(pwhile_stmt| $x:ident := $a:pwhile_arith_atom) => do
     let aExpr ← elabArithAtom a
     mkAppM ``Stmt.mkAssign #[mkStrLit x.getId.toString, aExpr]
-  -- | `(pwhile_stmt| $x:ident ?= $a:pwhile_arith_atom) => do
-  --   let aExpr ← elabArithAtom a
-  --   mkAppM ``Stmt.mkAssign? #[mkStrLit x.getId.toString, aExpr]
+  | `(pwhile_stmt| $x:ident ?= { $[$atoms],* }) => do
+    let atomExprs ← atoms.mapM elabArithAtom
+    let atoms ← mkListLit (mkConst ``ArithAtom) atomExprs.toList
+    mkAppM ``Stmt.mkAssign? #[mkStrLit x.getId.toString, atoms]
   | `(pwhile_stmt| $s1:pwhile_stmt ; $s2:pwhile_stmt) => do
     let s1Expr ← elabStmt s1
     let s2Expr ← elabStmt s2
