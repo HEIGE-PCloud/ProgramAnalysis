@@ -2,3 +2,4 @@ module
 import ProgramAnalysis.ControlFlowAnalysis
 import ProgramAnalysis.DataFlowAnalysis
 import ProgramAnalysis.Example
+import ProgramAnalysis.ProbabilisticPrograms

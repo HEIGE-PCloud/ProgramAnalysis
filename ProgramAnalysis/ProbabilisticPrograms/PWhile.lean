@@ -1,4 +1,5 @@
 module
+public import Lean
 
 namespace ProgramAnalysis.ProbabilisticPrograms
 
@@ -104,5 +105,51 @@ public def Stmt.toString : Stmt → String
   | .swhile b l s => s!"while [{b}]{l.toSuperscriptString} do {s.toString} od"
 
 instance : ToString Stmt := ⟨Stmt.toString⟩
+
+open Lean Elab Meta
+
+declare_syntax_cat pwhile_op_a
+scoped syntax "+" : pwhile_op_a
+scoped syntax "-" : pwhile_op_a
+scoped syntax "*" : pwhile_op_a
+scoped syntax "/" : pwhile_op_a
+
+declare_syntax_cat pwhile_op_b
+scoped syntax "&&" : pwhile_op_b
+scoped syntax "||" : pwhile_op_b
+
+declare_syntax_cat pwhile_op_r
+scoped syntax "==" : pwhile_op_r
+scoped syntax "!=" : pwhile_op_r
+scoped syntax "<" : pwhile_op_r
+scoped syntax "<=" : pwhile_op_r
+scoped syntax ">" : pwhile_op_r
+scoped syntax ">=" : pwhile_op_r
+
+declare_syntax_cat pwhile_arith_atom
+scoped syntax ident : pwhile_arith_atom
+scoped syntax num : pwhile_arith_atom
+scoped syntax "-" num : pwhile_arith_atom
+scoped syntax pwhile_arith_atom pwhile_op_a pwhile_arith_atom : pwhile_arith_atom
+scoped syntax "(" pwhile_arith_atom ")" : pwhile_arith_atom
+
+declare_syntax_cat pwhile_bool_atom
+scoped syntax "true" : pwhile_bool_atom
+scoped syntax "false" : pwhile_bool_atom
+scoped syntax "not" pwhile_bool_atom : pwhile_bool_atom
+scoped syntax pwhile_bool_atom pwhile_op_b pwhile_bool_atom : pwhile_bool_atom
+scoped syntax pwhile_arith_atom pwhile_op_r pwhile_arith_atom : pwhile_bool_atom
+scoped syntax "(" pwhile_bool_atom ")" : pwhile_bool_atom
+
+declare_syntax_cat pwhile_stmt
+scoped syntax "stop" : pwhile_stmt
+scoped syntax "skip" : pwhile_stmt
+scoped syntax ident ":=" pwhile_arith_atom : pwhile_stmt
+scoped syntax ident "?=" pwhile_arith_atom : pwhile_stmt
+scoped syntax pwhile_stmt ";" pwhile_stmt : pwhile_stmt
+scoped syntax "choose" num ":" pwhile_stmt "or" num ":" pwhile_stmt "ro": pwhile_stmt
+scoped syntax "if" pwhile_bool_atom "then" pwhile_stmt "else" pwhile_stmt "fi" : pwhile_stmt
+scoped syntax "while" pwhile_bool_atom "do" "(" pwhile_stmt ")" "od" : pwhile_stmt
+scoped syntax "(" pwhile_stmt ")" : pwhile_stmt
 
 end ProgramAnalysis.ProbabilisticPrograms
