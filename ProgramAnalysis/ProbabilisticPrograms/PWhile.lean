@@ -1,6 +1,6 @@
 module
 
-namespace ProgramAnalysis.DataFlowAnalysis.PWhile
+namespace ProgramAnalysis.ProbabilisticPrograms
 
 public abbrev Var := String
 
@@ -19,8 +19,7 @@ public def Op_a.toString : Op_a → String
   | .times => "*"
   | .div => "/"
 
-public instance : ToString Op_a where
-  toString := Op_a.toString
+public instance : ToString Op_a := ⟨Op_a.toString⟩
 
 public inductive Op_b
   | and
@@ -31,8 +30,7 @@ public def Op_b.toString : Op_b → String
   | .and => "∧"
   | .or => "∨"
 
-public instance : ToString Op_b where
-  toString := Op_b.toString
+public instance : ToString Op_b := ⟨Op_b.toString⟩
 
 public inductive Op_r
   | eq
@@ -51,8 +49,7 @@ public def Op_r.toString : Op_r → String
   | .ge => "≥"
   | .neq => "≠"
 
-public instance : ToString Op_r where
-  toString := Op_r.toString
+public instance : ToString Op_r := ⟨Op_r.toString⟩
 
 public inductive ArithAtom
   | var : Var → ArithAtom
@@ -83,18 +80,29 @@ public def BoolAtom.toString : BoolAtom → String
   | .op o b1 b2 => s!"({b1.toString} {o.toString} {b2.toString})"
   | .rel o a1 a2 => s!"({a1.toString} {o.toString} {a2.toString})"
 
-public instance : ToString BoolAtom where
-  toString := BoolAtom.toString
+public instance : ToString BoolAtom := ⟨BoolAtom.toString⟩
 
 public inductive Stmt
   | stop : Label → Stmt
   | skip : Label → Stmt
   | assign : Var → ArithAtom → Label → Stmt
-  | assign? : Var → List ArithAtom → Label → Stmt -- probabilistic assignment
+  | assign? : Var → List ArithAtom → Label → Stmt
   | seq : Stmt → Stmt → Stmt
-  | choose : Stmt → Stmt → Stmt -- probabilistic choice
+  | choose : Nat → Stmt → Nat → Stmt → Stmt
   | sif : BoolAtom → Label → Stmt → Stmt → Stmt
   | swhile : BoolAtom → Label → Stmt → Stmt
 deriving Repr, Ord, DecidableEq
 
-end ProgramAnalysis.DataFlowAnalysis.PWhile
+public def Stmt.toString : Stmt → String
+  | .stop l => s!"[stop]{l.toSuperscriptString}"
+  | .skip l => s!"[skip]{l.toSuperscriptString}"
+  | .assign var arith l => s!"[{var} := {arith}]{l.toSuperscriptString}"
+  | .assign? var ariths l => s!"[{var} ?= {ariths}]{l.toSuperscriptString}"
+  | .seq s1 s2 => s!"{s1.toString}\n{s2.toString}"
+  | .choose p1 s1 p2 s2 => s!"choose {p1}:{s1.toString} or {p2}:{s2.toString} ro"
+  | .sif b l s1 s2 => s!"if [{b}]{l.toSuperscriptString} then {s1.toString} else {s2.toString} fi"
+  | .swhile b l s => s!"while [{b}]{l.toSuperscriptString} do {s.toString} od"
+
+instance : ToString Stmt := ⟨Stmt.toString⟩
+
+end ProgramAnalysis.ProbabilisticPrograms
