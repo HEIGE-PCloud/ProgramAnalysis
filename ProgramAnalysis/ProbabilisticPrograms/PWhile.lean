@@ -345,7 +345,21 @@ def Stmt.final : Stmt → List Label
   | .sif _ _ s1 s2 => s1.final ++ s2.final
   | .swhile _ l _ => [l]
 
-def Stmt.flow : Stmt → List (Label × Prob × Label) := sorry
+public instance : OfNat Prob 0 where
+  ofNat := ⟨1, by decide⟩
 
+public instance : OfNat Prob 1 where
+  ofNat := ⟨1, by decide⟩
+
+def Stmt.flow : Stmt → List (Label × Prob × Label)
+  | .skip _ => []
+  | .stop l => [⟨l, 1, l⟩]
+  | .assign _ _ _ => []
+  | .assign? _ _ _ => []
+  | .seq s1 s2 => s1.flow ++ s2.flow ++ s1.final.map (fun l => ⟨l, 1, s2.init⟩)
+  | .choose l p1 s1 p2 s2 => s1.flow ++ s2.flow ++ [⟨l, p1, s1.init⟩, ⟨l, p2, s2.init⟩]
+  | .sif _ l s1 s2 => s1.flow ++ s2.flow ++ [⟨l, 1, s1.init⟩, ⟨l, 1, s2.init⟩]
+  | .swhile _ l s => s.flow ++ [⟨l, 1, s.init⟩] ++ s.final.map (fun l' => ⟨l', 1, l⟩)
+  
 
 end ProgramAnalysis.ProbabilisticPrograms
