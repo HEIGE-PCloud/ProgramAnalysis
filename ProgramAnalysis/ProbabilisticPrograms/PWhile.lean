@@ -434,11 +434,24 @@ public def Stmt.vars : Stmt → List Var
 public structure Prog where
   stmt : Stmt
   domains : List (Var × Finset Int)
-  allVarsHaveDomain : ∀ x ∈ stmt.vars, (domains.lookup x).isSome
+  allVarsHaveDomain : ∀ x ∈ stmt.vars, (domains.lookup x).isSome := by decide
 
 public def Prog.domain (p : Prog) (x : Var) : Option (Finset Int) :=
   p.domains.lookup x
 
+def example2 : Stmt := [pWhile|
+  x := x + 1
+]
+
+def prog2 : Prog where
+  stmt := example2
+  domains := [("x", {1, 2, 3, 4, 5, 6, 7, 8})]
+
+
+inductive TransferOperator (size : Nat) where
+  | I
+  | E (l₁ l₂ : Label)
+  | U (var : Var) (expr : ArithAtom)
 
 
 end ProgramAnalysis.ProbabilisticPrograms
