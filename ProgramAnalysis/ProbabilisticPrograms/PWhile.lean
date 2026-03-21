@@ -380,10 +380,10 @@ def E (size : Nat) (row col : Fin size) : Matrix (Fin size) (Fin size) (Fin 2) :
 def U (s : Finset Nat) (f : s → s) : Matrix s s (Fin 2) :=
   fun i j => if f i = j then 1 else 0
 
-def P (s : Finset Nat) (f : s → Bool) : Matrix s s (Fin 2) :=
+def P (s : Finset Nat) (f : Fin s.card → Bool) : Matrix (Fin s.card) (Fin s.card) (Fin 2) :=
   fun i j => if i = j ∧ f i then 1 else 0
 
-def I (s : Finset Nat) : Matrix s s (Fin 2) :=
+def I (s : Finset Nat) : Matrix (Fin s.card) (Fin s.card) (Fin 2) :=
   fun i j => if i = j then 1 else 0
 
 end ProgramAnalysis.ProbabilisticPrograms
