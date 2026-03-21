@@ -2,6 +2,7 @@ module
 public import Lean
 public import Mathlib.Data.Matrix.Basic
 public import Mathlib.Data.Finset.Basic
+public import Mathlib.Data.Finset.Order
 
 namespace ProgramAnalysis.ProbabilisticPrograms
 
@@ -382,5 +383,7 @@ def U (s : Finset Nat) (f : s → s) : Matrix s s (Fin 2) :=
 def P (s : Finset Nat) (f : s → Bool) : Matrix s s (Fin 2) :=
   fun i j => if i = j ∧ f i then 1 else 0
 
+def I (s : Finset Nat) : Matrix s s (Fin 2) :=
+  fun i j => if i = j then 1 else 0
 
 end ProgramAnalysis.ProbabilisticPrograms
