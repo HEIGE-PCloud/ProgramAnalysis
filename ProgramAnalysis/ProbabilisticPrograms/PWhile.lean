@@ -3,6 +3,14 @@ public import Lean
 
 namespace ProgramAnalysis.ProbabilisticPrograms
 
+public abbrev Prob := { p : Rat // 0 ≤ p ∧ p ≤ 1 }
+
+public instance : Ord Rat where
+  compare r1 r2 :=
+    if r1 < r2 then .lt
+    else if r1 = r2 then .eq
+    else .gt
+
 public abbrev Var := String
 
 public abbrev Label := Nat
@@ -89,7 +97,7 @@ public inductive Stmt
   | assign : Var → ArithAtom → Label → Stmt
   | assign? : Var → List ArithAtom → Label → Stmt
   | seq : Stmt → Stmt → Stmt
-  | choose : Label → Nat → Stmt → Nat → Stmt → Stmt
+  | choose : Label → Prob → Stmt → Prob → Stmt → Stmt
   | sif : BoolAtom → Label → Stmt → Stmt → Stmt
   | swhile : BoolAtom → Label → Stmt → Stmt
 deriving Repr, Ord, DecidableEq
@@ -126,7 +134,7 @@ public def Stmt.mkAssign? (x : Var) (as : List ArithAtom) : StateM Label Stmt :=
 public def Stmt.mkSeq (s1 s2 : StateM Label Stmt) : StateM Label Stmt := do
   return Stmt.seq (← s1) (← s2)
 
-public def Stmt.mkChoose (p1 : Nat) (s1 : StateM Label Stmt) (p2 : Nat) (s2 : StateM Label Stmt) : StateM Label Stmt := do
+public def Stmt.mkChoose (p1 : Prob) (s1 : StateM Label Stmt) (p2 : Prob) (s2 : StateM Label Stmt) : StateM Label Stmt := do
   return Stmt.choose (← freshLabel) p1 (← s1) p2 (← s2)
 
 public def Stmt.mkIf (b : BoolAtom) (thn els : StateM Label Stmt) : StateM Label Stmt := do
@@ -179,7 +187,7 @@ scoped syntax "skip" : pwhile_stmt
 scoped syntax ident ":=" pwhile_arith_atom : pwhile_stmt
 scoped syntax ident "?=" "{" pwhile_arith_atom,+ "}" : pwhile_stmt
 scoped syntax pwhile_stmt ";" pwhile_stmt : pwhile_stmt
-scoped syntax "choose" num ":" pwhile_stmt "or" num ":" pwhile_stmt "ro": pwhile_stmt
+scoped syntax "choose" scientific ":" pwhile_stmt "or" scientific ":" pwhile_stmt "ro": pwhile_stmt
 scoped syntax "if" pwhile_bool_atom "then" pwhile_stmt "else" pwhile_stmt "fi" : pwhile_stmt
 scoped syntax "while" pwhile_bool_atom "do" pwhile_stmt "od" : pwhile_stmt
 scoped syntax "(" pwhile_stmt ")" : pwhile_stmt
@@ -205,7 +213,7 @@ meta def elabOpr : Syntax → MetaM Expr
   | `(pwhile_op_r| >=) => return .const ``Op_r.ge []
   | _ => throwUnsupportedSyntax
 
-meta partial def elabArithAtom : Syntax → MetaM Expr
+meta partial def elabArithAtom : Syntax → TermElabM Expr
   | `(pwhile_arith_atom| $x:ident) => mkAppM ``ArithAtom.var #[mkStrLit x.getId.toString]
   | `(pwhile_arith_atom| $n:num) => mkAppM ``ArithAtom.const #[mkIntLit n.getNat]
   | `(pwhile_arith_atom| -$n:num) => mkAppM ``ArithAtom.const #[mkIntLit (n.getNat * -1)]
@@ -217,7 +225,7 @@ meta partial def elabArithAtom : Syntax → MetaM Expr
   | `(pwhile_arith_atom| ($a:pwhile_arith_atom)) => elabArithAtom a
   | _ => throwUnsupportedSyntax
 
-meta partial def elabBoolAtom : Syntax → MetaM Expr
+meta partial def elabBoolAtom : Syntax → TermElabM Expr
   | `(pwhile_bool_atom| true) => return .const ``BoolAtom.btrue []
   | `(pwhile_bool_atom| false) => return .const ``BoolAtom.bfalse []
   | `(pwhile_bool_atom| not $b:pwhile_bool_atom) => do
@@ -236,7 +244,7 @@ meta partial def elabBoolAtom : Syntax → MetaM Expr
   | `(pwhile_bool_atom| ($b:pwhile_bool_atom)) => elabBoolAtom b
   | _ => throwUnsupportedSyntax
 
-meta partial def elabStmt : Syntax → MetaM Expr
+meta partial def elabStmt : Syntax → TermElabM Expr
   | `(pwhile_stmt| stop) => do
     mkAppM ``Stmt.mkSkip #[]
   | `(pwhile_stmt| skip) => do
@@ -252,10 +260,22 @@ meta partial def elabStmt : Syntax → MetaM Expr
     let s1Expr ← elabStmt s1
     let s2Expr ← elabStmt s2
     mkAppM ``Stmt.mkSeq #[s1Expr, s2Expr]
-  | `(pwhile_stmt| choose $p1:num : $s1:pwhile_stmt or $p2:num : $s2:pwhile_stmt ro) => do
+  | stx@`(pwhile_stmt| choose $p1:scientific : $s1:pwhile_stmt or $p2:scientific : $s2:pwhile_stmt ro) => do
     let s1 ← elabStmt s1
     let s2 ← elabStmt s2
-    mkAppM ``Stmt.mkChoose #[mkNatLit p1.getNat, s1, mkNatLit p2.getNat, s2]
+    let (m, s, e) := p1.getScientific
+    let r1 := Rat.ofScientific m s e
+    let (m, s, e) := p2.getScientific
+    let r2 := Rat.ofScientific m s e
+    if r1 < 0 || r1 > 1 then
+      throwErrorAt p1 s!"Probability must be between 0 and 1, got {r1}"
+    if r2 < 0 || r2 > 1 then
+      throwErrorAt p2 s!"Probability must be between 0 and 1, got {r2}"
+    if r1 + r2 != 1 then
+      throwErrorAt stx s!"Probabilities must sum to 1, but got {r1} + {r2} = {r1 + r2}"
+    let p1Expr ← Term.elabTerm (← `(⟨($p1:scientific : Rat), by grind⟩)) (mkConst ``Prob)
+    let p2Expr ← Term.elabTerm (← `(⟨($p2:scientific : Rat), by grind⟩)) (mkConst ``Prob)
+    mkAppM ``Stmt.mkChoose #[p1Expr, s1, p2Expr, s2]
   | `(pwhile_stmt| if $b:pwhile_bool_atom then $s1:pwhile_stmt else $s2:pwhile_stmt fi) => do
     let bExpr ← elabBoolAtom b
     let s1Expr ← elabStmt s1
@@ -268,7 +288,7 @@ meta partial def elabStmt : Syntax → MetaM Expr
   | `(pwhile_stmt| ($s:pwhile_stmt)) => elabStmt s
   | _ => throwUnsupportedSyntax
 
-meta def elabPWhile (stx : Syntax) : MetaM Expr := do
+meta def elabPWhile (stx : Syntax) : TermElabM Expr := do
   let expr ← elabStmt stx
   let expr ← mkAppM ``Stmt.build #[expr]
   return expr
@@ -284,23 +304,48 @@ def example1 : Stmt := [pWhile|
   fi;
   while x < 4 do
     y ?= {0, 1, 2};
-    choose 1 : skip or 1 : stop ro;
+    choose 0.33 : skip or 0.67 : stop ro;
     x := (x + y)
   od;
   stop
 ]
+
+#check Rat
 
 /--
 info: [x := 0]¹;
 if [true]² then [skip]³ else [skip]⁴ fi;
 while [(x < 4)]⁵ do
 [y ?= [0, 1, 2]]⁶;
-[choose]⁷ 1:[skip]⁸ or 1:[skip]⁹ ro;
+[choose]⁷ 33/100:[skip]⁸ or 67/100:[skip]⁹ ro;
 [x := (x + y)]¹⁰
 od;
 [skip]¹¹
 -/
 #guard_msgs in
 #eval IO.println example1.toString
+
+def Stmt.init : Stmt → Label
+  | .skip l => l
+  | .stop l => l
+  | .assign _ _ l => l
+  | .assign? _ _ l => l
+  | .seq s1 _ => s1.init
+  | .choose l _ _ _ _ => l
+  | .sif _ l _ _ => l
+  | .swhile _ l _ => l
+
+def Stmt.final : Stmt → List Label
+  | .skip l => [l]
+  | .stop l => [l]
+  | .assign _ _ l => [l]
+  | .assign? _ _ l => [l]
+  | .seq _ s2 => s2.final
+  | .choose _ _ s1 _ s2 => s1.final ++ s2.final
+  | .sif _ _ s1 s2 => s1.final ++ s2.final
+  | .swhile _ l _ => [l]
+
+def Stmt.flow : Stmt → List (Label × Prob × Label) := sorry
+
 
 end ProgramAnalysis.ProbabilisticPrograms
