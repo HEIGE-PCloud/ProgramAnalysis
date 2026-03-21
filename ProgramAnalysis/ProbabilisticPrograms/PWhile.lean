@@ -1,9 +1,8 @@
 module
 public import Lean
-public import Mathlib.Data.Matrix.Basic
 public import Mathlib.Data.Finset.Basic
-public import Mathlib.Data.Finset.Order
-
+public import Mathlib.Data.Matrix.Basic
+public import Mathlib.LinearAlgebra.Matrix.Kronecker
 namespace ProgramAnalysis.ProbabilisticPrograms
 
 public abbrev Prob := { p : Rat // 0 ≤ p ∧ p ≤ 1 }
@@ -385,5 +384,61 @@ def P (s : Finset Nat) (f : Fin s.card → Bool) : Matrix (Fin s.card) (Fin s.ca
 
 def I (s : Finset Nat) : Matrix (Fin s.card) (Fin s.card) (Fin 2) :=
   fun i j => if i = j then 1 else 0
+
+open Kronecker in
+public def tensorProduct {m n k j : Nat}
+  (A : Matrix (Fin m) (Fin n) Nat)
+  (B : Matrix (Fin k) (Fin j) Nat) :
+  Matrix (Fin (m * k)) (Fin (n * j)) Nat :=
+  Matrix.reindex finProdFinEquiv finProdFinEquiv (A ⊗ₖ B)
+
+infixl:70 " ⊗ " => tensorProduct
+
+def padLeft (width : Nat) (s : String) : String :=
+  String.ofList (List.replicate (width - s.length) ' ') ++ s
+
+public def Matrix.prettyPrint [ToString α] {m n : Nat} (M : Matrix (Fin m) (Fin n) α) : String :=
+  let cells : Array (Array String) :=
+    Array.ofFn fun i : Fin m => Array.ofFn fun j : Fin n => toString (M i j)
+  let colWidths : Array Nat :=
+    Array.ofFn fun j : Fin n =>
+      cells.foldl (fun w row => max w row[j.val]!.length) 0
+  let rows : Array String :=
+    cells.map fun row =>
+      "| " ++ String.intercalate "  " (Array.zipWith (fun s w => padLeft w s) row colWidths).toList ++ " |"
+  String.intercalate "\n" rows.toList
+
+public instance [ToString α] {m n : Nat} : ToString (Matrix (Fin m) (Fin n) α) :=
+  ⟨Matrix.prettyPrint⟩
+
+public def ArithAtom.vars : ArithAtom → List Var
+  | .var x => [x]
+  | .const _ => []
+  | .op _ a1 a2 => a1.vars ++ a2.vars
+
+public def BoolAtom.vars : BoolAtom → List Var
+  | .btrue | .bfalse => []
+  | .not b => b.vars
+  | .op _ b1 b2 => b1.vars ++ b2.vars
+  | .rel _ a1 a2 => a1.vars ++ a2.vars
+
+public def Stmt.vars : Stmt → List Var
+  | .stop _ | .skip _ => []
+  | .assign x a _ => x :: a.vars
+  | .assign? x as _ => x :: as.flatMap ArithAtom.vars
+  | .seq s1 s2 => s1.vars ++ s2.vars
+  | .choose _ _ s1 _ s2 => s1.vars ++ s2.vars
+  | .sif b _ s1 s2 => b.vars ++ s1.vars ++ s2.vars
+  | .swhile b _ s => b.vars ++ s.vars
+
+public structure Prog where
+  stmt : Stmt
+  domains : List (Var × Finset Int)
+  allVarsHaveDomain : ∀ x ∈ stmt.vars, (domains.lookup x).isSome
+
+public def Prog.domain (p : Prog) (x : Var) : Option (Finset Int) :=
+  p.domains.lookup x
+
+
 
 end ProgramAnalysis.ProbabilisticPrograms

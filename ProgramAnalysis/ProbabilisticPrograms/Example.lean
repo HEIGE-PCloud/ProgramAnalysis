@@ -1,5 +1,4 @@
 import Mathlib.Data.Matrix.Basic
-import Mathlib.Data.Matrix.Basis
 import Mathlib.LinearAlgebra.Matrix.Kronecker
 
 def matrix1 : Matrix (Fin 2) (Fin 3) Nat := ![![1, 2, 3], ![4, 5, 6]]
