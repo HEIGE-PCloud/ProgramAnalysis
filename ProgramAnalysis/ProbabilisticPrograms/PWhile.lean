@@ -360,6 +360,17 @@ def Stmt.flow : Stmt → List (Label × Prob × Label)
   | .choose l p1 s1 p2 s2 => s1.flow ++ s2.flow ++ [⟨l, p1, s1.init⟩, ⟨l, p2, s2.init⟩]
   | .sif _ l s1 s2 => s1.flow ++ s2.flow ++ [⟨l, 1, s1.init⟩, ⟨l, 1, s2.init⟩]
   | .swhile _ l s => s.flow ++ [⟨l, 1, s.init⟩] ++ s.final.map (fun l' => ⟨l', 1, l⟩)
-  
+
+def Stmt.size : Stmt → Nat
+  | .skip _ => 1
+  | .stop _ => 1
+  | .assign _ _ _ => 1
+  | .assign? _ _ _ => 1
+  | .seq s1 s2 => s1.size + s2.size
+  | .choose _ _ s1 _ s2 => s1.size + s2.size + 1
+  | .sif _ _ s1 s2 => s1.size + s2.size + 1
+  | .swhile _ _ s => s.size + 1
+
+
 
 end ProgramAnalysis.ProbabilisticPrograms
